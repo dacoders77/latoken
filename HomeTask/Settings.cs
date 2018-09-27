@@ -9,6 +9,7 @@ namespace BitMEXAssistant
  * DB host is different on the local and production server.
  * hometask_settings.json is added to gitignor.
  */
+
 {
 	public static class Settings
 		{

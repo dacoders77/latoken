@@ -62,8 +62,10 @@ namespace BitMEXAssistant
 
 
 				if (flag)
-					MessageBox.Show("found!");
-				else {
+					//MessageBox.Show("found!");
+					Console.WriteLine("Found");
+				else
+				{
 
 					if (conn.State == System.Data.ConnectionState.Closed)
 					{
