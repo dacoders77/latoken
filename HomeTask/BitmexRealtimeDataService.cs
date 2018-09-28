@@ -109,7 +109,7 @@ namespace BitMEXAssistant {
         }
 
         private void WebSocketOnError(object sender, EventArgs<Exception> e) {
-            throw new AggregateException(e.Data);
+            //throw new AggregateException(e.Data);
         }
 
 		// Events declaration
