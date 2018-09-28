@@ -59,5 +59,14 @@ namespace BitMEXAssistant.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream tick_2 {
+            get {
+                return ResourceManager.GetStream("tick_2", resourceCulture);
+            }
+        }
     }
 }

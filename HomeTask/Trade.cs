@@ -50,7 +50,7 @@ namespace BitMEXAssistant
 
 		public void placeLimitOrder() {
 
-			form.ws.OnMessage += (sender, e) =>
+			form.ws.Message += (sender, e) =>
 			{
 				try
 				{
