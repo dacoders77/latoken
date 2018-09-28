@@ -54,14 +54,15 @@ namespace BitMEXAssistant
 			// Trade
 			//trade.placeLimitOrder();
 
-		    orderBookControl.PriceStart = 200;
-		    orderBookControl.PriceEnd = 300;
+			// High and low price values for DOM render
+		    orderBookControl.PriceStart = 220;
+		    orderBookControl.PriceEnd = 250;
 		    orderBookControl.PriceStep = new decimal(0.05);
 		}
 
 		void scroll_timer_Tick(object sender, EventArgs e) // событие таймера. используем его для подгонки графиков в центр панели, если они уехали за зону видимости
 		{
-			// работает
+			// Works good
 			//logging.log_add(this, "scroll:", " " + panel_big2.VerticalScroll.Maximum, 1);
 
 			if (!quote_received) // можно двигать скрол только после прихода планок цены. иначе максимум скрола по умолчания = 100.
@@ -70,9 +71,9 @@ namespace BitMEXAssistant
 				//logging.log_add(this, "scroll:", " max задан" + panel_big2.VerticalScroll.Maximum, 1);
 			}
 
-		} // scroll_timer_Tick
+		}
 
-        public void AddTrade(TradeData tradeData) => orderBookControl.AddTrade(tradeData);
+		public void AddTrade(TradeData tradeData) => orderBookControl.AddTrade(tradeData);
 
         private void OnBalanceChanged() {
             // nop
@@ -105,5 +106,5 @@ namespace BitMEXAssistant
                 OnOrderBookDataSetChanged();
             }
         }
-    }
+	}
 }

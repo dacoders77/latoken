@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Windows.Forms;
 
+
 namespace BitMEXAssistant
 {
 	/* Database handle class.

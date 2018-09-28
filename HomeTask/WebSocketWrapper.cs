@@ -7,7 +7,6 @@ namespace BitMEXAssistant {
 
         public WebSocketWrapper(string url) {
             _webSocket = new WebSocket(url);
-
             _webSocket.OnMessage += (sender, e) => OnMessage(new EventArgs<string>(e.Data));
             _webSocket.OnError += (sender, e) => OnError(new EventArgs<Exception>(e.Exception));
         }

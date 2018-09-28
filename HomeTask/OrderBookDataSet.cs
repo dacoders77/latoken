@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 
 namespace BitMEXAssistant {
+
     public class OrderBookDataSet {
         public OrderBookDataSet(ReadOnlyCollection<OrderBookRecord> ask, ReadOnlyCollection<OrderBookRecord> bid) {
             Ask = ask;

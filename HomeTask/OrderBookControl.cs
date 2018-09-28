@@ -10,37 +10,42 @@ using BitMEXAssistant.Properties;
 
 namespace BitMEXAssistant {
     public class OrderBookControl : Control {
-        private readonly int _chartWidth = 400; // положение по Х, горизонтальная координата. расстояние от левого края панели до стакана. ширина поля на котором рисуется график
-        private readonly int _intervalMezhStrok = 4; // интервал между строк
-        private readonly int _dlinaFonaZayav = 54; // длина поля стакана, выделяемое под заявки. данная переменная указывается руками далее вычисляется длина строки (dlina_fona_stroki) ибо неизвестно сколько знаков в цене инструмента, которым торгуем. потом данные переменные складываются и получается ширина стакана.
-        private readonly int suzhenie_fona = 0; // насколько будет сужен прямоугольник используемый в качестве фона. отрицательные значение (-5) вызовет расширение фона
-        private readonly bool showBorder = false; // отображать рамку
-        private readonly int limit_size_1 = 10; // пороги вывода кружочков на сделках (объем). 3 варианта: 1ый < 1ый порог. 2ой: > 1ого < ого. 3ий: > 2ого. когда прошла сделка с объемом < 1ого порога - кружочик выводится в виде точки
-        private readonly int limit_size_2 = 100;
-        private readonly int _markSize1 = 6; // 3 вида кругов для соответствующих объемом
+        private readonly int _chartWidth = 400; // Horizontal coordinate. Location on X axis. Width of the field on which the chart is rendered
+		private readonly int _verticalPriceBarInterval = 4; // Price bars vertical interval. The length between price bars
+        private readonly int _orderBackgroundWidth = 54; // Order background width. We don't know how many digits are in the price of traded symbol. Based on this value the width of the DOM is calculated
+		private readonly int _backGroundReduction = 0; // Background size reduction. The value on which the background of the price bar is reduced. Negative value will expand the background
+        private readonly bool showBorder = false; 
+        private readonly int _volumeSizeThreshold1 = 10; // Volume size circles thresholds. There are 3 sizes: 1st < 1st threshold. 2nd: > 1st < 2rd. 3rd: > 2nd
+        private readonly int _volumeSizeThreshold2 = 100;
+
+        private readonly int _markSize1 = 6; // 3 sizes of circles for 3 volume groups
         private readonly int _markSize2 = 16;
         private readonly int _markSize3 = 24;
-        private readonly int _pointsGraphCount = 38; // количество точек по которым строим график
-        private readonly int _pointsGraphStep = 30; // шаг точек графика по горизонтали. 
 
-        private readonly Font _markFont = new Font("Calibri", 10, FontStyle.Bold); // определим шрифт для кружочков
+        private readonly int _pointsGraphCount = 38; // The quantity of points used for rendering the chart
+        private readonly int _pointsGraphStep = 30; // Points horisontal step 
+
+        private readonly Font _markFont = new Font("Calibri", 10, FontStyle.Bold); // Circle font
 
         private readonly List<Tick> _ticks = new List<Tick>();
-        private readonly List<Point> _askChartPoints = new List<Point>(); // коллекция для хранения точек для построения линии ASK. заполняеится из update_bid_ask
-        private readonly List<Point> _bidChartPoints = new List<Point>(); // // коллекция для хранения точек для построения линии BID. заполняеится из update_bid_ask
+        private readonly List<Point> _askChartPoints = new List<Point>(); // The collection used for ask line chart render
+        private readonly List<Point> _bidChartPoints = new List<Point>(); 
         private OrderBookDataSet _dataSet;
 
-        private bool _scrollNeeded = true; // флаг для прокрутки стакана к той цене, которая торгуется. выполняется один раз
+        private bool _scrollNeeded = true; // Scroll trading price range to the visible area flag
 
         private readonly Pen _ticksPen = new Pen(Color.FromArgb(200, 0, 0, 0), 3);
-        private decimal _priceStart;
-        private decimal _priceEnd;
-        private decimal _priceStep = new decimal(0.1);
-        private readonly SoundPlayer _tradeSound;
+
+        private decimal _priceStart; // Visble DOM stack starting price
+        private decimal _priceEnd; // Ending price
+        private decimal _priceStep = new decimal(0.1); // Price bar step
+
+
+        private readonly SoundPlayer _tradeSound; // The sound played when a trade is being executed
 
         public OrderBookControl() {
             DoubleBuffered = true;
-            Font = new Font("Calibri", 10); // шрифт в строчках стакана
+            Font = new Font("Calibri", 10); // Font for price bars
             
             _tradeSound = new SoundPlayer(Resources.tick_2);
         }
@@ -51,7 +56,7 @@ namespace BitMEXAssistant {
 
             var g = e.Graphics;
 
-            // что бы было хорошее качество
+            // For better quality
             g.InterpolationMode = InterpolationMode.HighQualityBilinear;
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.SmoothingMode = SmoothingMode.HighQuality;
@@ -60,71 +65,81 @@ namespace BitMEXAssistant {
                 return;
 
             DrawPriceBar(g, DataSet);
-
             DrawLineChart(g, _askChartPoints, Pens.Red);
-
             DrawLineChart(g, _bidChartPoints, Pens.Green);
-
             DrawTicks(g, _ticks);
 
-            ScrollIfNeeded();
+            ScrollIfNeeded(); // Scroll to the visible area to the price range which is being traded right now
 
-            base.OnPaint(e);
+            base.OnPaint(e); // Redraw the control
         }
+		
 
         // TODO 
-        private void ScrollIfNeeded() { // скролл панелей до видимой зоны
+        private void ScrollIfNeeded() { // Scroll to the visible area
             if (_dataSet == null)
                 return;
 
-            // промотаем стакан к торгуемой цене. проматываем только тогда, когда пришли планци цены. 
-            // когда появились цены в матрице стакана - значит и планки пришли. проверяем цену 0-вой строчки на неравенство 0
+			// Scrol DOM to the price range which is being traded right now
+			// Scroll only when price range (min, max - only in Smartcom) is received. 
+			// Check [0] element in OrderBookDataSet
             var sampleVolume = _dataSet.Bid[0].Volume;
             if (_scrollNeeded && sampleVolume != 0) {
-                //form1_root.panel_big.AutoScrollPosition = new Point(0, (int) (((int)Font.GetHeight() + _intervalMezhStrok) * ((price_end - sampleValume) / price_step) - 400));
-                // обратимся в переменную market_delta_vol, там содержится координата на которой будет рисоваться график. 
-                // начальное ее значение = верхняя планка - нижняя / 2. прибавляем к этой переменной еще пол высоты панели, что бы бло по середине. 
-                // без этого получается координата верхнего края. стоит знак -. что бы передвинуть график к центру - скрол нужно уменьшать
-                _scrollNeeded = false;
+				//form1_root.panel_big.AutoScrollPosition = new Point(0, (int) (((int)Font.GetHeight() + _verticalPriceBarInterval) * ((price_end - sampleValume) / price_step) - 400));
+
+				// Get market_delta_vo variable. This is the coordinate on which the chart is gonna be rendered. 
+				// starting value = high price range - low price range / 2. Add half of the panel height in order to locate it at the middle
+				// Decrease scroll value to locate the chart at the middle of the visible area
+				_scrollNeeded = false;
             }
         }
 
         private void DrawTicks(Graphics g, IReadOnlyCollection<Tick> ticks) {
-            // рисуем график тиков (сделок)
+
+            // Draw ticks chart
             var tickPoints = ticks.Select(t => t.Position).ToArray();
             if (tickPoints.Length > 1)
                 g.DrawLines(_ticksPen, tickPoints.ToArray());
 
-            // рисуем кружочки
-            foreach (var tick in ticks) {
-                int markSize; // размер круга. рассчитывается на ходу в зависимости от направления и объема сделки
+			// Draw circles
+			/*
+				foreach (var tick in ticks)
+				{
+					int markSize; // Circle size is calculated in the run
 
-                // определение размера кружочка в зависимости от объема
-                if (tick.Volume <= limit_size_1)
-                    markSize = _markSize1;
-                else if (tick.Volume < limit_size_2)
-                    markSize = _markSize2;
-                else
-                    markSize = _markSize3;
+					// Calculate circle size based on the trade's volume 
+					if (tick.Volume <= _volumeSizeThreshold1)
+						markSize = _markSize1;
+					else if (tick.Volume < _volumeSizeThreshold2)
+						markSize = _markSize2;
+					else
+						markSize = _markSize3;
 
-                var showValue = tick.Volume > limit_size_1;
+					var showValue = tick.Volume > _volumeSizeThreshold1;
 
-                g.DrawEllipse(tick.IsBuy ? Pens.Green : Pens.LightCoral, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
-                g.FillEllipse(tick.IsBuy ? Brushes.LimeGreen : Brushes.LightPink, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
+					g.DrawEllipse(tick.IsBuy ? Pens.Green : Pens.LightCoral, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
+					g.FillEllipse(tick.IsBuy ? Brushes.LimeGreen : Brushes.LightPink, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
 
-                // цифра в кружочке
-                if (showValue)
-                    // выводим объем текстом. что бы определить куда нужно выводить строку - нужно ее длину поделить пополам и результат вычесть из точки. длина строки зависит от того, каким шрифтом пишем
-                    g.DrawString(tick.Volume.ToString(), _markFont, Brushes.Black, tick.Position.X - g.MeasureString(tick.Volume.ToString(), _markFont).Width / 2, tick.Position.Y - _markFont.Height / 2);
-            }
-        }
+					// Digit in a circle
+					if (showValue)
+						// Output volume as a text. In order to determine where to output a line - it's length should be divided on half and obtained result exclude from the point. The length of the bar is dependent on the font size
+						g.DrawString(tick.Volume.ToString(), _markFont, Brushes.Black, tick.Position.X - g.MeasureString(tick.Volume.ToString(), _markFont).Width / 2, tick.Position.Y - _markFont.Height / 2);
+				}
 
-        private static void DrawLineChart(Graphics g, IReadOnlyCollection<Point> points, Pen pen) {
+				*/
+
+
+
+
+		}
+
+		private static void DrawLineChart(Graphics g, IReadOnlyCollection<Point> points, Pen pen) {
             if (points.Count > 1)
                 g.DrawLines(pen, points.ToArray());
         }
 
-        private void DrawPriceBar(Graphics g, OrderBookDataSet dataSet) { // рисуем цены инструмента в столбик
+		// Draw a vertical stack of the prices 
+		private void DrawPriceBar(Graphics g, OrderBookDataSet dataSet) { 
             if (dataSet == null)
                 return;
 
@@ -133,59 +148,65 @@ namespace BitMEXAssistant {
             var y = 0;
             for (var p = _priceStart; p < _priceEnd; p += _priceStep) {
                 g.DrawString(p.ToString(CultureInfo.CurrentCulture), Font, Brushes.LightGray, _chartWidth, y);
-                y += fontHeight + _intervalMezhStrok;
+                y += fontHeight + _verticalPriceBarInterval;
             }
 
-            // подсчитаем длину строки. залезем в первую строчку матрицы бид и аска и возьмем оттуда значение. 
-            // смысл этого в том, что мы не знаем скоько знаков в цене инструмента. для это и лезем
-            var dlinaFonaStroki = _dlinaFonaZayav + (int)g.MeasureString(dataSet.Ask[0].Price.ToString(), Font).Width;
+			// Price bar background width calculation 
+            var priceBarBackGroundWidth = _orderBackgroundWidth + (int)g.MeasureString(dataSet.Ask[0].Price.ToString(), Font).Width;
 
+			// Render ask (uppder) part of the DOM
             foreach (var record in dataSet.Ask)
-                DrawPriceBarRow(g, record, dlinaFonaStroki, fontHeight, Brushes.LightPink);
+                DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LightPink);
+
+			// Draw bid (lower) part of the DOM
             foreach (var record in dataSet.Bid)
-                DrawPriceBarRow(g, record, dlinaFonaStroki, fontHeight, Brushes.LimeGreen);
+                DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LimeGreen);
         }
 
-        private void DrawPriceBarRow(Graphics g, OrderBookRecord record, int dlinaFonaStroki, int fontHeight, Brush baseBackground) {
-            // рассчитываем ширину и цвет столбика, который отображает объем заявок в цене
-            var askBackgroundWidth = GetPriceBarColumnLength(record.Volume, dlinaFonaStroki);
-            var askBackground = GetPriceBarColumnBrush(record.Volume, dlinaFonaStroki);
+        private void DrawPriceBarRow(Graphics g, OrderBookRecord record, int priceBarBackGroundWidth, int fontHeight, Brush baseBackground) {
+			// Calculate width and color of the small bar, which represents volume in a whole price bar (price row)
+            var askBackgroundWidth = GetPriceBarColumnLength(record.Volume, priceBarBackGroundWidth);
+            var askBackground = GetPriceBarColumnBrush(record.Volume, priceBarBackGroundWidth);
 
-            var y = (int)((fontHeight + _intervalMezhStrok) * ((_priceEnd - record.Price) / _priceStep));
+            var y = (int)((fontHeight + _verticalPriceBarInterval) * ((_priceEnd - record.Price) / _priceStep));
 
-            // общий фон строки
-            g.FillRectangle(baseBackground, _chartWidth, y + suzhenie_fona / 2, dlinaFonaStroki, fontHeight - suzhenie_fona);
-            // полосочка под заявки. меняет цвет в зависимости от объема.
-            g.FillRectangle(askBackground, _chartWidth, y + suzhenie_fona / 2, askBackgroundWidth, fontHeight - suzhenie_fona);
+            // Price bar background
+            g.FillRectangle(baseBackground, _chartWidth, y + _backGroundReduction / 2, priceBarBackGroundWidth, fontHeight - _backGroundReduction);
+           
+			// Volume bar in the whole price bar changes its color based in the volume
+			// *****************************************************************************
+			// RED BACKGROUND ON A BIG VOLUME
+            //g.FillRectangle(askBackground, _chartWidth, y + _backGroundReduction / 2, askBackgroundWidth, fontHeight - _backGroundReduction);
 
-            // цена ячейки + объем
+			// Price bar price + volume
             g.DrawString(record.Price.ToString(), Font, Brushes.Black, _chartWidth, y);
-            g.DrawString(record.Volume.ToString(), Font, Brushes.Black, _chartWidth + _dlinaFonaZayav, y);
+            g.DrawString(record.Volume.ToString(), Font, Brushes.Black, _chartWidth + _orderBackgroundWidth, y);
 
             if (showBorder)
                 g.DrawRectangle(
                     Pens.Black,
                     _chartWidth,
-                    y + suzhenie_fona / 2,
-                    (int)g.MeasureString(record.Price + "  " + record.Volume, Font).Width + _intervalMezhStrok, // TODO проверить что не перепутано
-                    fontHeight - suzhenie_fona);
+                    y + _backGroundReduction / 2,
+                    (int)g.MeasureString(record.Price + "  " + record.Volume, Font).Width + _verticalPriceBarInterval, // TODO check it! Whether it missplaced or not!
+                    fontHeight - _backGroundReduction);
         }
 
         private static Brush GetPriceBarColumnBrush(decimal price, int treshold) {
             var priceSqrt = Math.Sqrt((double)price);
-            if (priceSqrt < treshold / 2) // проверяем объем который вылезает за половину рассчитанной ширины стакана
+            if (priceSqrt < treshold / 2) // Check the volume which is greater than half of the calculated width of the DOM
                 return Brushes.Khaki;
             if (priceSqrt < treshold)
                 return Brushes.Tomato;
-            // если объем больше половины ширины
-            return Brushes.Red;
+			// If the size is greater than a half - make it RED!
+			return Brushes.Red;
+			
         }
 
         private static int GetPriceBarColumnLength(decimal price, int treshold) {
             var priceSqrt = Math.Sqrt((double)price);
-            if (priceSqrt < treshold / 2) // проверяем объем который вылезает за половину рассчитанной ширины стакана
-                return (int)priceSqrt;
-            // если объем больше половины ширины
+            if (priceSqrt < treshold / 2) // Check the volume which is greater than half of the calculated width of the DOM
+				return (int)priceSqrt;
+            // If the volume is greater than a half
             return treshold;
         }
 
@@ -218,16 +239,16 @@ namespace BitMEXAssistant {
             var fontHeight = (int)Font.GetHeight();
 
             if (_askChartPoints.Count >= _pointsGraphCount) {
-                _askChartPoints.RemoveAt(0); // удаляем первый элемент в массиве точек ask
-                _bidChartPoints.RemoveAt(0); // удаляем первый элемент в массиве точек bid
-            }
+                _askChartPoints.RemoveAt(0); // Remove the first element from ask array
+				_bidChartPoints.RemoveAt(0); // From bid
+			}
 
             if (dataSet != null) {
                 _askChartPoints.Add(new Point(_chartWidth, GetY(dataSet.Ask[0].Price, fontHeight)));
                 _bidChartPoints.Add(new Point(_chartWidth, GetY(dataSet.Bid[0].Price, fontHeight)));
             }
 
-            // смещаем оба массива бида и аска, создаем движение. проходим по всему массиву точек, начиная с 1ой (нулевой) и уменьшаем горизонтальную координату Х - на шаг графика.
+			// Shit both arrays (bid, ask), make a visual move. Run throughout the array (all points) starting from the 1st and decrease X coordinate with the step
             for (int i = 0; i < _askChartPoints.Count - 1; i++) {
                 _askChartPoints[i] = new Point(_askChartPoints[i].X - _pointsGraphStep, _askChartPoints[i].Y); // ask. и сдвигаем горизотальную координату всего массива на определенный шаг. это создает движение. чем больше шаг тем быстрее двигается
                 _bidChartPoints[i] = new Point(_bidChartPoints[i].X - _pointsGraphStep, _bidChartPoints[i].Y); // bid
@@ -237,7 +258,7 @@ namespace BitMEXAssistant {
         }
 
         private int GetY(decimal price, int fontHeight) {
-            return (int) (fontHeight / 2 + (fontHeight + _intervalMezhStrok) * ((_priceEnd - price) / _priceStep));
+            return (int) (fontHeight / 2 + (fontHeight + _verticalPriceBarInterval) * ((_priceEnd - price) / _priceStep));
         }
 
 
@@ -258,7 +279,7 @@ namespace BitMEXAssistant {
             if (count <= 1)
                 return;
 
-            var height = count * ((int) Font.GetHeight() + _intervalMezhStrok);
+            var height = count * ((int) Font.GetHeight() + _verticalPriceBarInterval);
             Size = new Size(Size.Width, (int) height);
         }
 
@@ -289,7 +310,7 @@ namespace BitMEXAssistant {
                 _priceStep = value;
                 UpdateHeight();
             }
-        } // шаг цены инструмента. RTS - 10
+        } 
 
         private class Tick {
             public Point Position { get; set; }

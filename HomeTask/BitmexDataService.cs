@@ -5,15 +5,17 @@ using BitMEX;
 namespace BitMEXAssistant {
     public class BitmexDataService {
         public ReadOnlyCollection<Instrument> Instruments { get; }
-        public Instrument ActiveInstrument { get; set; }
+        public Instrument ActiveInstrument { get; set; } // Get the list of all available symbols
         public IWebSocket WebSocket { get; }
         public BitMEXApi Api { get; }
 
         public BitmexDataService() {
-            WebSocket = new WebSocketWrapper("wss://testnet.bitmex.com/realtime");
-            Api = new BitMEXApi(Settings.bitmexApiKey, Settings.bitmexApiSecret, false);
+			//WebSocket = new WebSocketWrapper("wss://testnet.bitmex.com/realtime"); // wss://www.bitmex.com/realtime
+			WebSocket = new WebSocketWrapper("wss://www.bitmex.com/realtime");
 
-            Instruments = Api.GetActiveInstruments().OrderByDescending(a => a.Volume24H).ToList().AsReadOnly();
+			Api = new BitMEXApi(Settings.bitmexApiKey, Settings.bitmexApiSecret, false);
+
+			Instruments = Api.GetActiveInstruments().OrderByDescending(a => a.Volume24H).ToList().AsReadOnly();
             ActiveInstrument = Instruments[0];
 
             WebSocket.Connect();

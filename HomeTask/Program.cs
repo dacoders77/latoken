@@ -20,11 +20,7 @@ namespace BitMEXAssistant
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-            _mainController = new MainController(
-                new BitmexRealtimeDataService(
-                    new BitmexDataService()
-                ),
-                _mainForm = new Form1());
+            _mainController = new MainController(new BitmexRealtimeDataService(new BitmexDataService()), _mainForm = new Form1());
             
 			Application.Run(_mainForm);
 		}

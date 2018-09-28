@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BitMEXAssistant {
     public class BitmexRealtimeDataService {
-        private string symbol = "ETHUSD"; // ETHUSD
+        private string symbol = "ETHUSD"; // ETHUSD. Subscription symbol
         private readonly BitmexDataService _dataService;
 
         public BitmexRealtimeDataService(BitmexDataService dataService) {
@@ -38,13 +38,12 @@ namespace BitMEXAssistant {
                 _dataService.ActiveInstrument.Symbol = symbol;
                 _dataService.ActiveInstrument.TickSize = 0.5M;
                 _dataService.ActiveInstrument.Volume24H = 9000; // A random test value
-
             }
 
-            // Subscribe to order statuses
+            // Subscribe to orders statuses
             _dataService.WebSocket.Send("{\"op\": \"subscribe\", \"args\": [\"order\"]}");
 
-            // Subscribe to new orderbook
+            // Subscribe to orderbook
             _dataService.WebSocket.Send("{\"op\": \"subscribe\", \"args\": [\"orderBook10:" + symbol + "\"]}");
 
             // Subscribe to position for new symbol
@@ -55,8 +54,6 @@ namespace BitMEXAssistant {
 
             // Margin Connect - do this last so we already have the price.
             //ws.Send("{\"op\": \"subscribe\", \"args\": [\"margin\"]}");
-
-
 
             //UpdateFormsForTickSize(ActiveInstrument.TickSize, ActiveInstrument.DecimalPlacesInTickSize);
 
@@ -76,12 +73,12 @@ namespace BitMEXAssistant {
 
                     switch ((string)message["table"]) {
                         case "trade":
-                            var price = (double)data.Children().Last()["price"]; // TD["price"].Value<double>() - разве не так?
+                            var price = (double)data.Children().Last()["price"]; // TD["price"].Value<double>() - correct?
                             var symbol = (string)data.Children().Last()["symbol"];
                             var volume = (double)data.Children().Last()["size"];
                             var side = data.Children().Last()["side"].ToString().ToUpperInvariant() == "BUY" ? TradeDirection.Buy : TradeDirection.Sell;
 
-                            RaiseTradeDataReceived(new TradeData((decimal) price, volume, side));
+                            RaiseTradeDataReceived(new TradeData((decimal) price, volume, side)); // Call a method and rise an event
                             break;
                         case "orderBook10":
                             var asks = (JArray)data[0]["asks"];
@@ -106,7 +103,7 @@ namespace BitMEXAssistant {
 //                    UpdateWebSocketInfo(WebSocketInfo);
 //                }
             } catch (Exception ex) {
-                // TODO логгировать или что-то такое
+                // TODO make logging
                 throw;
             }
         }
@@ -115,22 +112,21 @@ namespace BitMEXAssistant {
             throw new AggregateException(e.Data);
         }
 
+		// Events declaration
+
+		// Trade data received event
         public event EventHandler<EventArgs<TradeData>> TradeDataReceived;
-
         private void RaiseTradeDataReceived(TradeData data) => OnTradeDataReceived(new EventArgs<TradeData>(data));
-
         protected virtual void OnTradeDataReceived(EventArgs<TradeData> e) => TradeDataReceived?.Invoke(this, e);
 
+		// Order book event received
         public event EventHandler<EventArgs<OrderBookDataSet>> OrderBookReceived;
-
         private void RaiseOrderBookReceived(OrderBookDataSet data) => OnOrderBookReceived(new EventArgs<OrderBookDataSet>(data));
-
         protected virtual void OnOrderBookReceived(EventArgs<OrderBookDataSet> e) => OrderBookReceived?.Invoke(this, e);
 
-        public event EventHandler<EventArgs<decimal>> BalanceReceived;
-
+		// Balance received event. // We don't need balance events for now
+		public event EventHandler<EventArgs<decimal>> BalanceReceived; 
         private void RaiseBalanceReceived(decimal data) => OnBalanceReceived(new EventArgs<decimal>(data));
-
         protected virtual void OnBalanceReceived(EventArgs<decimal> e) => BalanceReceived?.Invoke(this, e);
     }
 }

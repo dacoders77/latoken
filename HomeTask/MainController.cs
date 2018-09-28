@@ -1,4 +1,5 @@
 ﻿namespace BitMEXAssistant {
+
     public class MainController {
         private readonly BitmexRealtimeDataService _realtimeDataService;
         private readonly IMainView _mainView;
@@ -12,7 +13,12 @@
             _realtimeDataService.BalanceReceived += (sender, args) => _mainView.Balance = args.Data;
             _realtimeDataService.OrderBookReceived += (sender, args) => _mainView.OrderBookDataSet = args.Data;
         }
-    }
+
+		private void _realtimeDataService_OrderBookReceived(object sender, EventArgs<OrderBookDataSet> e)
+		{
+			throw new System.NotImplementedException();
+		}
+	}
 
     public interface IMainView {
         void AddTrade(TradeData data);

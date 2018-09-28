@@ -205,25 +205,19 @@ namespace BitMEXAssistant
 											// "action": "insert",
 											// "data": [
 
-											
+
 
 
 											// Extract client order ID as a suffix. Get last 4 digits out of the string
 											var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
-												// Add client order id to the DB as a blueprint
-												form.database.InsertTradeRow(clOrdID);
+											// Add client order id to the DB as a blueprint
+											form.database.InsertTradeRow(clOrdID);
 
 											// Add a record to the DB
 											// ..
 
-											if (TD[0]["ordStatus"].ToString() == "Filled")
-											{
-												// WORKS GOOD! 
-												// Update record where clOrdID = clOrdID. Values: buy/sell_order_id, price
-												// In Update method 3 first charackters shall be taken and accordingley to the parsed value it must be 
-												// inserted to BUY or SELL part of the table!
-												MessageBox.Show("Filled! Write it to the DB");
-											}
+											
+											
 
 										}
 										else
