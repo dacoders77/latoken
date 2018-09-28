@@ -102,8 +102,8 @@ namespace BitMEXAssistant {
                 g.DrawLines(_ticksPen, tickPoints.ToArray());
 
 			// Draw circles
-			/*
-				foreach (var tick in ticks)
+			
+				foreach (var tick in ticks.ToList())
 				{
 					int markSize; // Circle size is calculated in the run
 
@@ -126,7 +126,7 @@ namespace BitMEXAssistant {
 						g.DrawString(tick.Volume.ToString(), _markFont, Brushes.Black, tick.Position.X - g.MeasureString(tick.Volume.ToString(), _markFont).Width / 2, tick.Position.Y - _markFont.Height / 2);
 				}
 
-				*/
+				
 
 
 
@@ -250,8 +250,8 @@ namespace BitMEXAssistant {
 
 			// Shit both arrays (bid, ask), make a visual move. Run throughout the array (all points) starting from the 1st and decrease X coordinate with the step
             for (int i = 0; i < _askChartPoints.Count - 1; i++) {
-                _askChartPoints[i] = new Point(_askChartPoints[i].X - _pointsGraphStep, _askChartPoints[i].Y); // ask. и сдвигаем горизотальную координату всего массива на определенный шаг. это создает движение. чем больше шаг тем быстрее двигается
-                _bidChartPoints[i] = new Point(_bidChartPoints[i].X - _pointsGraphStep, _bidChartPoints[i].Y); // bid
+                _askChartPoints[i] = new Point(_askChartPoints[i].X - _pointsGraphStep, _askChartPoints[i].Y); // ask. Shift a horisontal coordinate of the whole array with a step. This makes a move. Bigger step - faster move
+				_bidChartPoints[i] = new Point(_bidChartPoints[i].X - _pointsGraphStep, _bidChartPoints[i].Y); // bid 
             }
 
             Invalidate();

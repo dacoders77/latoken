@@ -9,9 +9,12 @@
             _mainView = mainView;
 
             _realtimeDataService.Initialize();
+
+			// Model events subscription
             _realtimeDataService.TradeDataReceived += (sender, args) => _mainView.AddTrade(args.Data);
             _realtimeDataService.BalanceReceived += (sender, args) => _mainView.Balance = args.Data;
             _realtimeDataService.OrderBookReceived += (sender, args) => _mainView.OrderBookDataSet = args.Data;
+
         }
 
 		private void _realtimeDataService_OrderBookReceived(object sender, EventArgs<OrderBookDataSet> e)
