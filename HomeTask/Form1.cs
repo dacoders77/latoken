@@ -37,18 +37,14 @@ namespace BitMEXAssistant
 			panel_big.AutoScroll = true; 
 			
 
-
 		}
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
-
-		
-
 			// High and low price values for DOM render
-		    orderBookControl.PriceStart = 200;
-		    orderBookControl.PriceEnd = 250;
-		    orderBookControl.PriceStep = new decimal(0.05);
+		    orderBookControl.PriceStart = 6300; // ETHUSD 200-250. XBTCUSD
+		    orderBookControl.PriceEnd = 6600;
+		    orderBookControl.PriceStep = new decimal(0.5); // XBTCUSD: 0.5, ETHUSD: 0.05
 		}
 
         private void ScrollTimerOnTick(object sender, EventArgs e) // событие таймера. используем его для подгонки графиков в центр панели, если они уехали за зону видимости

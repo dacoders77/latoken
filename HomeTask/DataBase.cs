@@ -29,10 +29,8 @@ namespace BitMEXAssistant
 
 
 		public DataBase() {
-
 			connectionString = "server=" + Settings.dbHost + ";user id=slinger;password=659111;database=home_task";
 			dbConn = new MySqlConnection(connectionString);
-			Console.WriteLine(connectionString);
 		}
 
 		// Before trades will be add an empty record is created and Client order id is inserted. Later all 4 orders will use this is as a key
@@ -67,7 +65,7 @@ namespace BitMEXAssistant
 
 				if (flag)
 					//MessageBox.Show("found!");
-					Console.WriteLine("Found");
+					Console.WriteLine("DataBase.cs line 68. Found");
 				else
 				{
 
@@ -111,7 +109,7 @@ namespace BitMEXAssistant
 				}
 				conn.Close();
 			}
-			BitMexProfitCalculate(clOrdID);
+			//BitMexProfitCalculate(clOrdID);
 		}
 
 		private void BitMexProfitCalculate(string clOrdID) {
@@ -134,17 +132,17 @@ namespace BitMEXAssistant
 				{
 					conn.Open();
 				}
-				_sql = string.Format("SELECT symbol FROM trades WHERE sell_price = {0}", clOrdID);
+				_sql = string.Format("SELECT sell_price FROM trades WHERE cl_order_id = {0}", clOrdID);
 				MySqlCommand cmd = new MySqlCommand(_sql, conn);
 				object scalarSellPrice = cmd.ExecuteScalar();
-				//MessageBox.Show("DataBase.cs line 136. : " + scalarValue);
+				MessageBox.Show("DataBase.cs line 140. : " + scalarSellPrice);
 
 				if (scalarSellPrice == null)
 				{
 					_sellPrice = 0;
 				}
 				else {
-					_sellPrice = (double)scalarSellPrice;
+					//_sellPrice = Convert.ToDouble(scalarSellPrice);
 				}
 
 				conn.Close();
@@ -155,22 +153,22 @@ namespace BitMEXAssistant
 				{
 					conn.Open();
 				}
-				_sql = string.Format("SELECT symbol FROM trades WHERE buy_price = {0}", clOrdID);
+				_sql = string.Format("SELECT buy_price FROM trades WHERE cl_order_id = {0}", clOrdID);
 				MySqlCommand cmd2 = new MySqlCommand(_sql, conn);
 				object scalarBuyPrice = cmd2.ExecuteScalar();
-				//MessageBox.Show("DataBase.cs line 136. : " + scalarValue);
+				MessageBox.Show("DataBase.cs line 161. : " + scalarBuyPrice);
 				if (scalarBuyPrice == null)
 				{
 					_buyPrice = 0;
 				}
 				else
 				{
-					_buyPrice = (double)scalarBuyPrice;
+					//_buyPrice = Convert.ToDouble(scalarBuyPrice);
 				}
 				conn.Close();
 
-				double profit = _sellPrice - _buyPrice;
-				MessageBox.Show("DataBase.cs line 156. : " + profit);
+				//double profit = _sellPrice - _buyPrice;
+				//MessageBox.Show("DataBase.cs line 156. : " + profit);
 			}
 
 			/*

@@ -12,7 +12,7 @@ namespace BitMEXAssistant {
 
         private readonly BitmexDataService _dataService;
 		private TradeBitMex2 _tradeBitMex2;
-		private TradeBitMex2 _tradeBitMex3;
+		private TradeBitMex2 _tradeBitMex3; // Works good
 
 		private string _symbol; 
 
@@ -92,7 +92,7 @@ namespace BitMEXAssistant {
                             var volume = (double)data.Children().Last()["size"];
                             var side = data.Children().Last()["side"].ToString().ToUpperInvariant() == "BUY" ? TradeDirection.Buy : TradeDirection.Sell;
 
-                            RaiseTradeDataReceived(new TradeData((decimal) price, volume, side)); // Call a method and rise an event
+                            RaiseTradeDataReceived(new TradeData((decimal) price, volume, side)); // Call the method and rise an event
                             break;
                         case "orderBook10":
                             var asks = (JArray)data[0]["asks"];
@@ -126,7 +126,7 @@ namespace BitMEXAssistant {
         }
 
         private void WebSocketOnError(object sender, EventArgs<Exception> e) {
-            //throw new AggregateException(e.Data);
+            throw new AggregateException(e.Data);
         }
 
 		// Events declaration

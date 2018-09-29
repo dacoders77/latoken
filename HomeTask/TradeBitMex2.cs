@@ -44,12 +44,8 @@ namespace BitMEXAssistant
 		public void orderBookRecevied(EventArgs<string> e) {
 
 			var message = JObject.Parse(e.Data);
-
-			var res =_bitmexDataService.Api.GetInstrument("ETHUSD");
-			Console.WriteLine(res);
 			
-
-			if (message.ContainsKey("table"))
+			if (message.ContainsKey("table") && false)
 			{
 				if ((string)message["table"] == "orderBook10")
 				{
@@ -64,29 +60,32 @@ namespace BitMEXAssistant
 							// Place sell order
 							if (!activeSellOrder && openNewPairOrderEnabled)
 							{
+								
 								sellLimitPrice = (Double)TD[0]["asks"][0][0] + _limitPriceShift;
 								string response = _bitmexDataService.Api.LimitOrder("ETHUSD", "Sell", 1, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
-								//Console.WriteLine("------------ Place order response");
-								//Console.WriteLine(response);
+								Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
+								Console.WriteLine(response);
 
-								MessageBox.Show(response);
 								sellOrderId = JObject.Parse(response)["orderID"].ToString();
 
 								order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Sell));
 								activeSellOrder = true; // Set flag to true when the order is opened 
+							
 							}
 
 							// Place buy order
 							if (!activeBuyOrder && openNewPairOrderEnabled)
 							{
+								
 								buyLimitPrice = (Double)TD[0]["bids"][0][0] - _limitPriceShift;
 								string response = _bitmexDataService.Api.LimitOrder("ETHUSD", "Buy", 1, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
 								buyOrderId = JObject.Parse(response)["orderID"].ToString();
-								//Console.WriteLine("------------ Place order response");
-								//Console.WriteLine(response);
+								Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
+								Console.WriteLine(response);
 
 								order.Add(buyOrderId, new Order(buyOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Buy));
 								activeBuyOrder = true; // Set flag to true when the order is opened 
+								
 							}
 
 							openNewPairOrderEnabled = false; // When BUY and SELL orders are open wait untill the position is closed
@@ -196,7 +195,7 @@ namespace BitMEXAssistant
 
 									// Add client order id to the DB as a blueprint
 									// WORKS GOOD!
-									_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
+									//_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
 
 
 
@@ -231,7 +230,7 @@ namespace BitMEXAssistant
 								
 
 								// Upadate rcord in db: clOrdID, order[TD[0]["orderID"].ToString()].Direction, price, orderID(buy_order_id, sell_order_id)
-								_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
+								//_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
 
 								//foreach (KeyValuePair<string, Order> entry in order)
 								//{

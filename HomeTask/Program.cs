@@ -16,8 +16,8 @@ namespace BitMEXAssistant
 		private static BitmexRealtimeDataService _bitmexRealtimeDataService;
 		private static DataBase _dataBase;
 
-		private static TradeBitMex _trade;
-		private static TradeBitMex2 _trade2; // New trading class. Everything will be moved there from TradeBitMex
+		//private static TradeBitMex _trade;
+		//private static TradeBitMex2 _trade2; // New trading class. Everything will be moved there from TradeBitMex
 
 		/// <summary>
 		/// The main entry point for the application.
@@ -29,8 +29,8 @@ namespace BitMEXAssistant
 			Application.SetCompatibleTextRenderingDefault(false);
 
 			_dataBase = new DataBase();
-			_bitmexDataService = new BitmexDataService(TradinServer.Demo, _dataBase); // Real or demo server
-			_bitmexRealtimeDataService = new BitmexRealtimeDataService(_bitmexDataService, "ETHUSD"); // + Trading symbol
+			_bitmexDataService = new BitmexDataService(TradinServer.Real, _dataBase); // Real or demo server
+			_bitmexRealtimeDataService = new BitmexRealtimeDataService(_bitmexDataService, "XBTUSD"); // + Trading symbol ETHUSD
 
 			// Hit btc connection shall be performed like that:
 			//_hitbtcDataService = new HitbtcDataService(TradinServer.Demo, _dataBase); 

@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using BitMEXAssistant.Properties;
 
 namespace BitMEXAssistant {
+
     public class OrderBookControl : Control {
         private readonly int _chartWidth = 400; // Horizontal coordinate. Location on X axis. Width of the field on which the chart is rendered
 		private readonly int _verticalPriceBarInterval = 4; // Price bars vertical interval. The length between price bars
@@ -36,7 +37,7 @@ namespace BitMEXAssistant {
 
         private decimal _priceStart; // Visble DOM stack starting price
         private decimal _priceEnd; // Ending price
-        private decimal _priceStep = new decimal(0.1); // Price bar step
+        private decimal _priceStep = new decimal(); // Price bar step. ETHUSD: 0.1, XBTCUSD: 1
 
 
         private readonly SoundPlayer _tradeSound; // The sound played when a trade is being executed
@@ -180,6 +181,9 @@ namespace BitMEXAssistant {
         }
 
         public void AddTrade(TradeData data) {
+
+			Console.WriteLine("OrderBookControl.cs line 184: " + data.Direction + " " + data.Price + " " + data.Volume);
+
             if (_ticks.Count > _pointsGraphCount)
                 _ticks.RemoveAt(0);
 
@@ -199,7 +203,7 @@ namespace BitMEXAssistant {
                 _ticks[i].Position = new Point(_ticks[i].Position.X - _pointsGraphStep, _ticks[i].Position.Y);
             }
 
-            _tradeSound.Play();
+            //_tradeSound.Play(); // Play sound in each tick 
             
             Invalidate();
         }
