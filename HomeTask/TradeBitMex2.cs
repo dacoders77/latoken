@@ -45,6 +45,10 @@ namespace BitMEXAssistant
 
 			var message = JObject.Parse(e.Data);
 
+			var res =_bitmexDataService.Api.GetInstrument("ETHUSD");
+			Console.WriteLine(res);
+			
+
 			if (message.ContainsKey("table"))
 			{
 				if ((string)message["table"] == "orderBook10")
@@ -68,7 +72,7 @@ namespace BitMEXAssistant
 								MessageBox.Show(response);
 								sellOrderId = JObject.Parse(response)["orderID"].ToString();
 
-								order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), "Sell"));
+								order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Sell));
 								activeSellOrder = true; // Set flag to true when the order is opened 
 							}
 
@@ -81,7 +85,7 @@ namespace BitMEXAssistant
 								//Console.WriteLine("------------ Place order response");
 								//Console.WriteLine(response);
 
-								order.Add(buyOrderId, new Order(buyOrderId, JObject.Parse(response)["ordStatus"].ToString(), "Buy"));
+								order.Add(buyOrderId, new Order(buyOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Buy));
 								activeBuyOrder = true; // Set flag to true when the order is opened 
 							}
 
@@ -224,9 +228,10 @@ namespace BitMEXAssistant
 							if ((string)TD[0]["ordStatus"] == "Filled") {
 								// Extract client order ID as a suffix. Get last 4 digits out of the string
 								var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
-								MessageBox.Show("TradeBitMex2.cs line 221. FILLED! : " + clOrdID + " " + order[TD[0]["orderID"].ToString()].Direction);
+								
 
 								// Upadate rcord in db: clOrdID, order[TD[0]["orderID"].ToString()].Direction, price, orderID(buy_order_id, sell_order_id)
+								_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
 
 								//foreach (KeyValuePair<string, Order> entry in order)
 								//{

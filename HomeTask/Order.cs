@@ -17,9 +17,9 @@ namespace BitMEXAssistant
 	{
 		public string Id { get; set; }
 		public string Status { get; set; }
-		public string Direction { get; set; }
+		public TradeDirection Direction { get; set; }
 
-		public Order(string id, string status, string direction)
+		public Order(string id, string status, TradeDirection direction)
 		{
 			Id = id;
 			Status = status;

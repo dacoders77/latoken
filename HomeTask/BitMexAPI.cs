@@ -619,6 +619,7 @@ namespace BitMEX
 					break;
 				}
 			}
+
 			try
 			{
 				return JsonConvert.DeserializeObject<List<Instrument>>(res);
