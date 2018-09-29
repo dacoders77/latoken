@@ -32,8 +32,6 @@ namespace BitMEXAssistant {
         private readonly List<Point> _bidChartPoints = new List<Point>(); 
         private OrderBookDataSet _dataSet;
 
-        private bool _scrollNeeded = true; // Scroll trading price range to the visible area flag
-
         private readonly Pen _ticksPen = new Pen(Color.FromArgb(200, 0, 0, 0), 3);
 
         private decimal _priceStart; // Visble DOM stack starting price
@@ -69,31 +67,9 @@ namespace BitMEXAssistant {
             DrawLineChart(g, _bidChartPoints, Pens.Green);
             DrawTicks(g, _ticks);
 
-            ScrollIfNeeded(); // Scroll to the visible area to the price range which is being traded right now
-
-            base.OnPaint(e); // Redraw the control
+            base.OnPaint(e);
         }
 		
-
-        // TODO 
-        private void ScrollIfNeeded() { // Scroll to the visible area
-            if (_dataSet == null)
-                return;
-
-			// Scrol DOM to the price range which is being traded right now
-			// Scroll only when price range (min, max - only in Smartcom) is received. 
-			// Check [0] element in OrderBookDataSet
-            var sampleVolume = _dataSet.Bid[0].Volume;
-            if (_scrollNeeded && sampleVolume != 0) {
-				//form1_root.panel_big.AutoScrollPosition = new Point(0, (int) (((int)Font.GetHeight() + _verticalPriceBarInterval) * ((price_end - sampleValume) / price_step) - 400));
-
-				// Get market_delta_vo variable. This is the coordinate on which the chart is gonna be rendered. 
-				// starting value = high price range - low price range / 2. Add half of the panel height in order to locate it at the middle
-				// Decrease scroll value to locate the chart at the middle of the visible area
-				_scrollNeeded = false;
-            }
-        }
-
         private void DrawTicks(Graphics g, IReadOnlyCollection<Tick> ticks) {
 
             // Draw ticks chart
@@ -102,35 +78,28 @@ namespace BitMEXAssistant {
                 g.DrawLines(_ticksPen, tickPoints.ToArray());
 
 			// Draw circles
-			
-				foreach (var tick in ticks.ToList())
-				{
-					int markSize; // Circle size is calculated in the run
+			foreach (var tick in ticks.ToList())
+			{
+				int markSize; // Circle size is calculated in the run
 
-					// Calculate circle size based on the trade's volume 
-					if (tick.Volume <= _volumeSizeThreshold1)
-						markSize = _markSize1;
-					else if (tick.Volume < _volumeSizeThreshold2)
-						markSize = _markSize2;
-					else
-						markSize = _markSize3;
+				// Calculate circle size based on the trade's volume 
+				if (tick.Volume <= _volumeSizeThreshold1)
+					markSize = _markSize1;
+				else if (tick.Volume < _volumeSizeThreshold2)
+					markSize = _markSize2;
+				else
+					markSize = _markSize3;
 
-					var showValue = tick.Volume > _volumeSizeThreshold1;
+				var showValue = tick.Volume > _volumeSizeThreshold1;
 
-					g.DrawEllipse(tick.IsBuy ? Pens.Green : Pens.LightCoral, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
-					g.FillEllipse(tick.IsBuy ? Brushes.LimeGreen : Brushes.LightPink, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
+				g.DrawEllipse(tick.IsBuy ? Pens.Green : Pens.LightCoral, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
+				g.FillEllipse(tick.IsBuy ? Brushes.LimeGreen : Brushes.LightPink, tick.Position.X - markSize / 2, tick.Position.Y - markSize / 2, markSize, markSize);
 
-					// Digit in a circle
-					if (showValue)
-						// Output volume as a text. In order to determine where to output a line - it's length should be divided on half and obtained result exclude from the point. The length of the bar is dependent on the font size
-						g.DrawString(tick.Volume.ToString(), _markFont, Brushes.Black, tick.Position.X - g.MeasureString(tick.Volume.ToString(), _markFont).Width / 2, tick.Position.Y - _markFont.Height / 2);
-				}
-
-				
-
-
-
-
+				// Digit in a circle
+				if (showValue)
+					// Output volume as a text. In order to determine where to output a line - it's length should be divided on half and obtained result exclude from the point. The length of the bar is dependent on the font size
+					g.DrawString(tick.Volume.ToString(), _markFont, Brushes.Black, tick.Position.X - g.MeasureString(tick.Volume.ToString(), _markFont).Width / 2, tick.Position.Y - _markFont.Height / 2);
+			}
 		}
 
 		private static void DrawLineChart(Graphics g, IReadOnlyCollection<Point> points, Pen pen) {
@@ -145,30 +114,30 @@ namespace BitMEXAssistant {
 
             var fontHeight = (int)Font.GetHeight();
 
-            var y = 0;
             for (var p = _priceStart; p < _priceEnd; p += _priceStep) {
-                g.DrawString(p.ToString(CultureInfo.CurrentCulture), Font, Brushes.LightGray, _chartWidth, y);
-                y += fontHeight + _verticalPriceBarInterval;
+                g.DrawString(p.ToString(CultureInfo.CurrentCulture), Font, Brushes.LightGray, _chartWidth, GetY(p, fontHeight) - fontHeight / 2);
             }
 
 			// Price bar background width calculation 
             var priceBarBackGroundWidth = _orderBackgroundWidth + (int)g.MeasureString(dataSet.Ask[0].Price.ToString(), Font).Width;
 
-			// Render ask (uppder) part of the DOM
+		    var maxVolume = Math.Max(dataSet.Ask.Max(d => d.Volume), dataSet.Bid.Max(d => d.Volume));
+
+		    // Render ask (uppder) part of the DOM
             foreach (var record in dataSet.Ask)
-                DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LightPink);
+                DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LightPink, maxVolume);
 
 			// Draw bid (lower) part of the DOM
             foreach (var record in dataSet.Bid)
-                DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LimeGreen);
+                DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LimeGreen, maxVolume);
         }
 
-        private void DrawPriceBarRow(Graphics g, OrderBookRecord record, int priceBarBackGroundWidth, int fontHeight, Brush baseBackground) {
+        private void DrawPriceBarRow(Graphics g, OrderBookRecord record, int priceBarBackGroundWidth, int fontHeight, Brush baseBackground, int maxVolume) {
 			// Calculate width and color of the small bar, which represents volume in a whole price bar (price row)
-            var askBackgroundWidth = GetPriceBarColumnLength(record.Volume, priceBarBackGroundWidth);
-            var askBackground = GetPriceBarColumnBrush(record.Volume, priceBarBackGroundWidth);
+            var askBackgroundWidth = GetPriceBarColumnLength(record.Volume, priceBarBackGroundWidth, maxVolume);
+            var askBackground = GetPriceBarColumnBrush(record.Volume, maxVolume);
 
-            var y = (int)((fontHeight + _verticalPriceBarInterval) * ((_priceEnd - record.Price) / _priceStep));
+            var y = GetY(record.Price, fontHeight) - fontHeight / 2;
 
             // Price bar background
             g.FillRectangle(baseBackground, _chartWidth, y + _backGroundReduction / 2, priceBarBackGroundWidth, fontHeight - _backGroundReduction);
@@ -176,7 +145,7 @@ namespace BitMEXAssistant {
 			// Volume bar in the whole price bar changes its color based in the volume
 			// *****************************************************************************
 			// RED BACKGROUND ON A BIG VOLUME
-            //g.FillRectangle(askBackground, _chartWidth, y + _backGroundReduction / 2, askBackgroundWidth, fontHeight - _backGroundReduction);
+            g.FillRectangle(askBackground, _chartWidth, y + _backGroundReduction / 2, askBackgroundWidth, fontHeight - _backGroundReduction);
 
 			// Price bar price + volume
             g.DrawString(record.Price.ToString(), Font, Brushes.Black, _chartWidth, y);
@@ -191,23 +160,23 @@ namespace BitMEXAssistant {
                     fontHeight - _backGroundReduction);
         }
 
-        private static Brush GetPriceBarColumnBrush(decimal price, int treshold) {
-            var priceSqrt = Math.Sqrt((double)price);
-            if (priceSqrt < treshold / 2) // Check the volume which is greater than half of the calculated width of the DOM
+        private static Brush GetPriceBarColumnBrush(int volume, int maxVolume) {
+            //var volumeSqrt = (int) Math.Sqrt(volume);
+            if (volume < maxVolume / 2) // Check the volume which is greater than half of the calculated width of the DOM
                 return Brushes.Khaki;
-            if (priceSqrt < treshold)
+            if (volume < maxVolume)
                 return Brushes.Tomato;
 			// If the size is greater than a half - make it RED!
 			return Brushes.Red;
 			
         }
 
-        private static int GetPriceBarColumnLength(decimal price, int treshold) {
-            var priceSqrt = Math.Sqrt((double)price);
-            if (priceSqrt < treshold / 2) // Check the volume which is greater than half of the calculated width of the DOM
-				return (int)priceSqrt;
-            // If the volume is greater than a half
-            return treshold;
+        private static int GetPriceBarColumnLength(int volume, int maxWidth, int maxVolume) {
+            //var volumeSqrt = (int) Math.Sqrt(volume);
+            if (volume >= maxVolume)
+                return maxWidth;
+
+            return (int) (volume / (double) maxVolume * maxWidth);
         }
 
         public void AddTrade(TradeData data) {
@@ -258,7 +227,7 @@ namespace BitMEXAssistant {
         }
 
         private int GetY(decimal price, int fontHeight) {
-            return (int) (fontHeight / 2 + (fontHeight + _verticalPriceBarInterval) * ((_priceEnd - price) / _priceStep));
+            return (int) ((fontHeight + _verticalPriceBarInterval) * ((_priceEnd - price) / _priceStep));
         }
 
 

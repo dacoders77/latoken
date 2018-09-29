@@ -7,13 +7,12 @@ namespace BitMEXAssistant
 {
 	public partial class Form1 : Form, IMainView 
     {
-		// DELETE
-        //public BitMEXApi bitmex;
-        //public IWebSocket ws;
 
 		// DOM
 		bool quote_received = true; 
 
+		// Trade. Symbol leg 1. Bitmex exchange
+		private Trade trade;
 
 		public string symbol = "ETHUSD"; // ETHUSD
 		//public string clientOrderId = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "bbb"; // Client order id. This id comes back when an order is executed. Used for linking orders together
@@ -23,6 +22,7 @@ namespace BitMEXAssistant
 
         private decimal _balance;
         private OrderBookDataSet _orderBookDataSet;
+        private readonly Timer _scrollTimer = new Timer();
 
         public Form1() 
         {
@@ -30,15 +30,13 @@ namespace BitMEXAssistant
 
 			// DOM
 			// таймер для скрола панелей, когда график уезжает за экран
-			var scroll_timer = new Timer();
-			scroll_timer.Tick += scroll_timer_Tick; // связали событие таймера
-			scroll_timer.Interval = 200; // интервал таймера
-			scroll_timer.Enabled = true;
+            _scrollTimer.Tick += ScrollTimerOnTick; // связали событие таймера
+			_scrollTimer.Interval = 2000; // интервал таймера
+            _scrollTimer.Start();
 
 			panel_big.AutoScroll = true; 
 			
-			
-			
+
 
 		}
 
@@ -48,25 +46,33 @@ namespace BitMEXAssistant
 		
 
 			// High and low price values for DOM render
-		    orderBookControl.PriceStart = 220;
+		    orderBookControl.PriceStart = 200;
 		    orderBookControl.PriceEnd = 250;
 		    orderBookControl.PriceStep = new decimal(0.05);
 		}
 
-		void scroll_timer_Tick(object sender, EventArgs e) // событие таймера. используем его для подгонки графиков в центр панели, если они уехали за зону видимости
+        private void ScrollTimerOnTick(object sender, EventArgs e) // событие таймера. используем его для подгонки графиков в центр панели, если они уехали за зону видимости
 		{
-			// Works good
-			//logging.log_add(this, "scroll:", " " + panel_big2.VerticalScroll.Maximum, 1);
-
-			if (!quote_received) // можно двигать скрол только после прихода планок цены. иначе максимум скрола по умолчания = 100.
-			{
-				//panel_big2.VerticalScroll.Value = panel_big2.VerticalScroll.Value + 200;
-				//logging.log_add(this, "scroll:", " max задан" + panel_big2.VerticalScroll.Maximum, 1);
-			}
-
+		    if (orderBookControl.DataSet != null && orderBookControl.DataSet.Ask.Count > 0)
+		        ScrollToPrice(orderBookControl.DataSet.Ask[0].Price, panel_big);
 		}
 
-		public void AddTrade(TradeData tradeData) => orderBookControl.AddTrade(tradeData);
+        private void ScrollToPrice(decimal currentPrice, ScrollableControl panel) {
+            var relativePrice = (double) (currentPrice - orderBookControl.PriceStart) /
+                                (double) (orderBookControl.PriceEnd - orderBookControl.PriceStart);
+
+            var scrollSize = panel.VerticalScroll.Maximum - panel.VerticalScroll.Minimum;
+
+            var offset = panel.VerticalScroll.Minimum - panel_big.Height / 2;
+
+            var verticalScrollValue = (int) (scrollSize * (1 - relativePrice) + offset);
+
+            verticalScrollValue = Math.Max(panel.VerticalScroll.Minimum, Math.Min(panel.VerticalScroll.Maximum, verticalScrollValue));
+
+            panel.VerticalScroll.Value = verticalScrollValue;
+        }
+
+        public void AddTrade(TradeData tradeData) => orderBookControl.AddTrade(tradeData);
 
         private void OnBalanceChanged() {
             // nop
