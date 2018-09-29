@@ -93,11 +93,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BitmexRealtimeDataService.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="Trade.cs" />
+    <Compile Include="TradeBitMex.cs" />
+    <Compile Include="TradeBitMex2.cs" />
     <Compile Include="TradeData.cs" />
     <Compile Include="TradeDirection.cs" />
+    <Compile Include="TradeHitBtc.cs" />
     <Compile Include="TradingServer.cs" />
     <Compile Include="WebSocketWrapper.cs" />
+    <Compile Include="WSEvents.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

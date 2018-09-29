@@ -23,9 +23,8 @@ namespace BitMEXAssistant
 		private string sqlQueryString;
 		private bool flag;
 
-		public DataBase(Form1 Form) {
+		public DataBase() {
 
-			form = Form;
 			connectionString = "server=" + Settings.dbHost + ";user id=slinger;password=659111;database=home_task";
 			dbConn = new MySqlConnection(connectionString);
 			Console.WriteLine(connectionString);

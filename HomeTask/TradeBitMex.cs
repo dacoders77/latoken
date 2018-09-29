@@ -20,7 +20,7 @@ namespace BitMEXAssistant
 	 * When orders are executed and Filled websocket message is received - both orders are stored in the same row in the DB. Profit is calculated.
 	 */
 
-	class Trade
+	class TradeBitMex
 	{
 		private BitmexDataService form;
 		private BitMEX.BitMEXApi _bitMEXApi;
@@ -43,7 +43,7 @@ namespace BitMEXAssistant
 		private Dictionary<string, Order> order; // The same as order statuses but contains Order object as the value
 
 		// Constructor
-		public Trade(BitmexDataService Form, BitMEX.BitMEXApi BitMEXApi) {
+		public TradeBitMex(BitmexDataService Form, BitMEX.BitMEXApi BitMEXApi) {
 
 			form = Form;
 			_bitMEXApi = BitMEXApi;
@@ -61,11 +61,12 @@ namespace BitMEXAssistant
 				{
 					JObject Message = JObject.Parse(e.Data); // Parse each WS message
 
-
 					if (Message.ContainsKey("table"))
 					{
 						if ((string)Message["table"] == "orderBook10")
 						{
+
+							//--------
 							if (Message.ContainsKey("data"))
 							{
 								JArray TD = (JArray)Message["data"];
@@ -175,10 +176,6 @@ namespace BitMEXAssistant
 											}
 										}
 									}
-
-
-
-
 								}
 							}
 						}

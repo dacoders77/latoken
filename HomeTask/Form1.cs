@@ -14,10 +14,6 @@ namespace BitMEXAssistant
 		// DOM
 		bool quote_received = true; 
 
-		// Trade. Symbol leg 1. Bitmex exchange
-		private Trade _trade;
-
-		// Hedge. Symbol leg 2. HitBtc exchange
 
 		public string symbol = "ETHUSD"; // ETHUSD
 		//public string clientOrderId = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "bbb"; // Client order id. This id comes back when an order is executed. Used for linking orders together

@@ -9,8 +9,9 @@ namespace BitMEXAssistant {
 		public Instrument ActiveInstrument { get; set; } // Get the list of all available symbols
 		public IWebSocket WebSocket { get; }
 		public BitMEXApi Api { get; }
+		public DataBase dataBase { get; }
 
-		public BitmexDataService(TradinServer tradingServer) {
+		public BitmexDataService(TradinServer tradingServer, DataBase data_base) {
 
 			if (tradingServer == TradinServer.Real)
 			{
@@ -20,10 +21,9 @@ namespace BitMEXAssistant {
 			else {
 				WebSocket = new WebSocketWrapper("wss://testnet.bitmex.com/realtime"); 
 				Api = new BitMEXApi(Settings.bitmexDemoApiKey, Settings.bitmexDemoApiSecret, false);
-				System.Windows.Forms.MessageBox.Show(Settings.bitmexDemoApiKey + " / " + Settings.bitmexDemoApiSecret);
 			}
 
-
+			dataBase = data_base; // Data base methods are gonna be called in TradeBitmex etc.
 			
 			Instruments = Api.GetActiveInstruments().OrderByDescending(a => a.Volume24H).ToList().AsReadOnly();
 			ActiveInstrument = Instruments[0];
