@@ -4,6 +4,8 @@
         private readonly BitmexRealtimeDataService _realtimeDataService;
         private readonly IMainView _mainView;
 
+
+
         public MainController(BitmexRealtimeDataService realtimeDataService, IMainView mainView) {
             _realtimeDataService = realtimeDataService;
             _mainView = mainView;
@@ -15,12 +17,10 @@
             _realtimeDataService.BalanceReceived += (sender, args) => _mainView.Balance = args.Data;
             _realtimeDataService.OrderBookReceived += (sender, args) => _mainView.OrderBookDataSet = args.Data;
 
+			
+			
         }
 
-		private void _realtimeDataService_OrderBookReceived(object sender, EventArgs<OrderBookDataSet> e)
-		{
-			throw new System.NotImplementedException();
-		}
 	}
 
     public interface IMainView {

@@ -7,15 +7,15 @@ namespace BitMEXAssistant
 {
 	public partial class Form1 : Form, IMainView 
     {
-
-        public BitMEXApi bitmex;
-        public IWebSocket ws;
+		// DELETE
+        //public BitMEXApi bitmex;
+        //public IWebSocket ws;
 
 		// DOM
 		bool quote_received = true; 
 
 		// Trade. Symbol leg 1. Bitmex exchange
-		private Trade trade;
+		private Trade _trade;
 
 		// Hedge. Symbol leg 2. HitBtc exchange
 
@@ -41,18 +41,15 @@ namespace BitMEXAssistant
 
 			panel_big.AutoScroll = true; 
 			
-			// Trade
-			trade = new Trade(this);
-
-			// DB
-			database = new DataBase(this);
+			
+			
 
 		}
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
-			// Trade
-			//trade.placeLimitOrder();
+
+		
 
 			// High and low price values for DOM render
 		    orderBookControl.PriceStart = 220;

@@ -96,6 +96,7 @@
     <Compile Include="Trade.cs" />
     <Compile Include="TradeData.cs" />
     <Compile Include="TradeDirection.cs" />
+    <Compile Include="TradingServer.cs" />
     <Compile Include="WebSocketWrapper.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>

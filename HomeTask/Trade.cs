@@ -22,7 +22,9 @@ namespace BitMEXAssistant
 
 	class Trade
 	{
-		private Form1 form;
+		private BitmexDataService form;
+		private BitMEX.BitMEXApi _bitMEXApi;
+
 		bool activeSellOrder = false;
 		bool activeBuyOrder = false;
 		bool openNewPairOrderEnabled = true;
@@ -41,20 +43,24 @@ namespace BitMEXAssistant
 		private Dictionary<string, Order> order; // The same as order statuses but contains Order object as the value
 
 		// Constructor
-		public Trade(Form1 Form) {
+		public Trade(BitmexDataService Form, BitMEX.BitMEXApi BitMEXApi) {
 
 			form = Form;
+			_bitMEXApi = BitMEXApi;
 			order = new Dictionary<string, Order>();
 
 		}
 
 		public void placeLimitOrder() {
 
-			form.ws.Message += (sender, e) =>
+			
+
+			form.WebSocket.Message += (sender, e) =>
 			{
 				try
 				{
 					JObject Message = JObject.Parse(e.Data); // Parse each WS message
+
 
 					if (Message.ContainsKey("table"))
 					{
@@ -72,9 +78,11 @@ namespace BitMEXAssistant
 									if (!activeSellOrder && openNewPairOrderEnabled)
 									{
 										sellLimitPrice = (Double)TD[0]["asks"][0][0] + limitPriceShift;
-										string response = form.bitmex.LimitOrder(form.symbol, "Sell", 1, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+										string response = _bitMEXApi.LimitOrder("ETHUSD", "Sell", 1, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
 										//Console.WriteLine("------------ Place order response");
 										//Console.WriteLine(response);
+
+										MessageBox.Show(response);
 										sellOrderId = JObject.Parse(response)["orderID"].ToString();
 
 										order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), "Sell"));
@@ -85,7 +93,7 @@ namespace BitMEXAssistant
 									if (!activeBuyOrder && openNewPairOrderEnabled)
 									{
 										buyLimitPrice = (Double)TD[0]["bids"][0][0] - limitPriceShift;
-										string response = form.bitmex.LimitOrder(form.symbol, "Buy", 1, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+										string response = _bitMEXApi.LimitOrder("ETHUSD", "Buy", 1, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
 										buyOrderId = JObject.Parse(response)["orderID"].ToString();
 										//Console.WriteLine("------------ Place order response");
 										//Console.WriteLine(response);
@@ -140,7 +148,7 @@ namespace BitMEXAssistant
 												rateLimitDate = DateTime.Now.AddMilliseconds(apiRequestDelay); 
 												sellLimitPrice = (Double)TD[0]["asks"][0][0] + limitPriceShift;
 
-												string response = form.bitmex.AmendOrder(sellOrderId, sellLimitPrice);
+												string response = _bitMEXApi.AmendOrder(sellOrderId, sellLimitPrice);
 												//Console.WriteLine("-------------------------- SELL order has moved! Amend it!: " + response);
 											}
 										}	
@@ -162,7 +170,7 @@ namespace BitMEXAssistant
 												rateLimitDate = DateTime.Now.AddMilliseconds(apiRequestDelay);
 												buyLimitPrice = (Double)TD[0]["bids"][0][0] - limitPriceShift;
 
-												string response = form.bitmex.AmendOrder(buyOrderId, buyLimitPrice);
+												string response = _bitMEXApi.AmendOrder(buyOrderId, buyLimitPrice);
 												//Console.WriteLine("-------------------------- SELL order has moved! Amend it!: " + response);
 											}
 										}
@@ -181,6 +189,7 @@ namespace BitMEXAssistant
 
 							//MessageBox.Show("ddd");
 							Console.WriteLine("############" + Message);
+							
 
 							if (Message.ContainsKey("data"))
 							{
@@ -211,7 +220,8 @@ namespace BitMEXAssistant
 											// Extract client order ID as a suffix. Get last 4 digits out of the string
 											var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
 											// Add client order id to the DB as a blueprint
-											form.database.InsertTradeRow(clOrdID);
+											// WORKS GOOD!
+								// form.database.InsertTradeRow(clOrdID);
 
 											// Add a record to the DB
 											// ..

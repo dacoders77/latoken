@@ -19,6 +19,8 @@ namespace BitMEXAssistant
 			public static string dbHost { get; }
 			public static string bitmexApiKey { get; }
 			public static string bitmexApiSecret { get; }
+			public static string bitmexDemoApiKey { get; }
+			public static string bitmexDemoApiSecret { get; }
 			public static string hitbtcApiKey { get; }
 			public static string hitbtcApiSecret { get; }
 
@@ -35,6 +37,8 @@ namespace BitMEXAssistant
 					dbHost = (string)x["dbHost"];
 					bitmexApiKey = (string)x["bitmexApiKey"];
 					bitmexApiSecret = (string)x["bitmexApiSecret"];
+					bitmexDemoApiKey = (string)x["bitmexDemoApiKey"];
+					bitmexDemoApiSecret = (string)x["bitmexDemoApiSecret"];
 					hitbtcApiKey = (string)x["hitbtcApiKey"];
 					hitbtcApiSecret = (string)x["hitbtcApiSecret"];
 				}
