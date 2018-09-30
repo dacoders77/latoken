@@ -13,7 +13,7 @@ namespace BitMEXAssistant {
     public class OrderBookControl : Control {
         private readonly int _chartWidth = 400; // Horizontal coordinate. Location on X axis. Width of the field on which the chart is rendered
 		private readonly int _verticalPriceBarInterval = 4; // Price bars vertical interval. The length between price bars
-        private readonly int _orderBackgroundWidth = 54; // Order background width. We don't know how many digits are in the price of traded symbol. Based on this value the width of the DOM is calculated
+        private readonly int _orderBackgroundWidth = 84; // Order background width. We don't know how many digits are in the price of traded symbol. Based on this value the width of the DOM is calculated
 		private readonly int _backGroundReduction = 0; // Background size reduction. The value on which the background of the price bar is reduced. Negative value will expand the background
         private readonly bool showBorder = false; 
         private readonly int _volumeSizeThreshold1 = 10; // Volume size circles thresholds. There are 3 sizes: 1st < 1st threshold. 2nd: > 1st < 2rd. 3rd: > 2nd
@@ -21,7 +21,7 @@ namespace BitMEXAssistant {
 
         private readonly int _markSize1 = 6; // 3 sizes of circles for 3 volume groups
         private readonly int _markSize2 = 16;
-        private readonly int _markSize3 = 24;
+        private readonly int _markSize3 = 36;
 
         private readonly int _pointsGraphCount = 38; // The quantity of points used for rendering the chart
         private readonly int _pointsGraphStep = 30; // Points horisontal step 

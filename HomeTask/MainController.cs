@@ -1,4 +1,6 @@
-﻿namespace BitMEXAssistant {
+﻿using System;
+
+namespace BitMEXAssistant {
 
     public class MainController {
         private readonly BitmexRealtimeDataService _realtimeDataService;
@@ -13,9 +15,9 @@
 
 			// Model events subscription
 
-            _realtimeDataService.TradeDataReceived += (sender, args) => _mainView.AddTrade(args.Data);
-            _realtimeDataService.BalanceReceived += (sender, args) => _mainView.Balance = args.Data;
-            _realtimeDataService.OrderBookReceived += (sender, args) => _mainView.OrderBookDataSet = args.Data;
+            _realtimeDataService.TradeDataReceived += (sender, args) => _mainView.Invoke((Action) (() => _mainView.AddTrade(args.Data)));
+            _realtimeDataService.BalanceReceived += (sender, args) => _mainView.Invoke((Action)(() => _mainView.Balance = args.Data));
+            _realtimeDataService.OrderBookReceived += (sender, args) => _mainView.Invoke((Action)(() => _mainView.OrderBookDataSet = args.Data));
 
         }
 
@@ -27,5 +29,7 @@
         decimal Balance { get; set; }
 
         OrderBookDataSet OrderBookDataSet { get; set; }
+
+        object Invoke(Delegate @delegate);
     }
 }
