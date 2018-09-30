@@ -18,32 +18,32 @@ namespace BitMEXAssistant
 		//public string clientOrderId = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "bbb"; // Client order id. This id comes back when an order is executed. Used for linking orders together
 
 		// DB
-		public DataBase database;
+		private DataBase _database;
 
         private decimal _balance;
         private OrderBookDataSet _orderBookDataSet;
         private readonly Timer _scrollTimer = new Timer();
 
-        public Form1() 
+        public Form1(DataBase dataBase) 
         {
 			InitializeComponent();
+			_database = dataBase;
 
 			// DOM
 			// таймер для скрола панелей, когда график уезжает за экран
             _scrollTimer.Tick += ScrollTimerOnTick; // связали событие таймера
-			_scrollTimer.Interval = 2000; // интервал таймера
+			_scrollTimer.Interval = 4000; // интервал таймера
             _scrollTimer.Start();
 
 			panel_big.AutoScroll = true; 
 			
-
 		}
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
 			// High and low price values for DOM render
 		    orderBookControl.PriceStart = 6300; // ETHUSD 200-250. XBTCUSD
-		    orderBookControl.PriceEnd = 6600;
+		    orderBookControl.PriceEnd = 6900;
 		    orderBookControl.PriceStep = new decimal(0.5); // XBTCUSD: 0.5, ETHUSD: 0.05
 		}
 
@@ -101,5 +101,12 @@ namespace BitMEXAssistant
                 OnOrderBookDataSetChanged();
             }
         }
+
+		// TEST. DELETE
+		private void button2_Click(object sender, EventArgs e)
+		{
+			// Testing the record. DELETE 
+			_database.BitMexProfitCalculate("5604");
+		}
 	}
 }

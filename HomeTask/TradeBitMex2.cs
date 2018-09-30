@@ -45,7 +45,7 @@ namespace BitMEXAssistant
 
 			var message = JObject.Parse(e.Data);
 			
-			if (message.ContainsKey("table") && false)
+			if (message.ContainsKey("table"))
 			{
 				if ((string)message["table"] == "orderBook10")
 				{
@@ -62,9 +62,10 @@ namespace BitMEXAssistant
 							{
 								
 								sellLimitPrice = (Double)TD[0]["asks"][0][0] + _limitPriceShift;
-								string response = _bitmexDataService.Api.LimitOrder("ETHUSD", "Sell", 1, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
-								Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
-								Console.WriteLine(response);
+								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Sell", 1, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+								MessageBox.Show(response);
+								//Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
+								//Console.WriteLine(response);
 
 								sellOrderId = JObject.Parse(response)["orderID"].ToString();
 
@@ -78,10 +79,11 @@ namespace BitMEXAssistant
 							{
 								
 								buyLimitPrice = (Double)TD[0]["bids"][0][0] - _limitPriceShift;
-								string response = _bitmexDataService.Api.LimitOrder("ETHUSD", "Buy", 1, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Buy", 1, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+								MessageBox.Show(response);
 								buyOrderId = JObject.Parse(response)["orderID"].ToString();
-								Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
-								Console.WriteLine(response);
+								//Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
+								//Console.WriteLine(response);
 
 								order.Add(buyOrderId, new Order(buyOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Buy));
 								activeBuyOrder = true; // Set flag to true when the order is opened 
@@ -181,23 +183,16 @@ namespace BitMEXAssistant
 								{
 									// Update existing status of the order Filled, Canceled etc. Here we update any status. We don't determine the exact status itself
 									order[(string)TD[0]["orderID"]].Status = (string)TD[0]["ordStatus"];
-									Console.WriteLine("Line 184. Trade.cs. Order: " + order[(string)TD[0]["orderID"]].Id + " Direction: " + order[(string)TD[0]["orderID"]].Direction + " Status: " + order[(string)TD[0]["orderID"]].Status);
-
-									// ADD BLUE PRINT to db only on Update order??
-									// Now it seems like it is added on all events: update, filled, canceled. CHECK IT! 
-									// When order is added:
-									// "table": "order",
-									// "action": "insert",
-									// "data": [
+									Console.WriteLine("Line 186. Trade.cs. Order: " + order[(string)TD[0]["orderID"]].Id + " Direction: " + order[(string)TD[0]["orderID"]].Direction + " Status: " + order[(string)TD[0]["orderID"]].Status);
 
 									// Extract client order ID as a suffix. Get last 4 digits out of the string
 									var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
 
-									// Add client order id to the DB as a blueprint
+									// Add client order id to the DB as a BLUEPRINT
 									// WORKS GOOD!
-									//_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
 
-
+									MessageBox.Show("TradeBitMex2.cs line 194: clOrdId will be sent to DB: " + clOrdID);
+									_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
 
 								}
 								else
@@ -206,9 +201,6 @@ namespace BitMEXAssistant
 									Console.WriteLine("Null status value while updating orderId in dictionary. Trade.cs line 192");
 								}
 							}
-
-
-
 						}
 					}
 				}
@@ -216,7 +208,7 @@ namespace BitMEXAssistant
 				if ((string)message["action"] == "update")
 				{
 					//MessageBox.Show("update");
-
+					
 					if (message.ContainsKey("data"))
 					{
 						JArray TD = (JArray)message["data"];
@@ -226,11 +218,16 @@ namespace BitMEXAssistant
 
 							if ((string)TD[0]["ordStatus"] == "Filled") {
 								// Extract client order ID as a suffix. Get last 4 digits out of the string
+								Console.WriteLine("TradeBitMext2.cs line 226. TD0 " + TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4));
+
+
 								var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
+
+								Console.WriteLine("TradeBitMext2.cs line 228 ********************************" + clOrdID);
 								
 
 								// Upadate rcord in db: clOrdID, order[TD[0]["orderID"].ToString()].Direction, price, orderID(buy_order_id, sell_order_id)
-								//_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
+								_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
 
 								//foreach (KeyValuePair<string, Order> entry in order)
 								//{
@@ -240,6 +237,7 @@ namespace BitMEXAssistant
 							}
 						}
 					}
+					
 
 				}
 			}

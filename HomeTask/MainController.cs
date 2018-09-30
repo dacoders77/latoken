@@ -13,7 +13,6 @@
 
 			// Model events subscription
 
-			// DISABLED EVENTS. NO CHART! FOR TESTING
             _realtimeDataService.TradeDataReceived += (sender, args) => _mainView.AddTrade(args.Data);
             _realtimeDataService.BalanceReceived += (sender, args) => _mainView.Balance = args.Data;
             _realtimeDataService.OrderBookReceived += (sender, args) => _mainView.OrderBookDataSet = args.Data;

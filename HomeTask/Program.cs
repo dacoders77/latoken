@@ -29,7 +29,7 @@ namespace BitMEXAssistant
 			Application.SetCompatibleTextRenderingDefault(false);
 
 			_dataBase = new DataBase();
-			_bitmexDataService = new BitmexDataService(TradinServer.Real, _dataBase); // Real or demo server
+			_bitmexDataService = new BitmexDataService(TradinServer.Demo, _dataBase); // Real or demo server
 			_bitmexRealtimeDataService = new BitmexRealtimeDataService(_bitmexDataService, "XBTUSD"); // + Trading symbol ETHUSD
 
 			// Hit btc connection shall be performed like that:
@@ -39,7 +39,7 @@ namespace BitMEXAssistant
 
 			//_trade2 = new TradeBitMex2(_bitmexRealtimeDataService); // BitMex
 
-			_mainController = new MainController(_bitmexRealtimeDataService, _mainForm = new Form1());
+			_mainController = new MainController(_bitmexRealtimeDataService, _mainForm = new Form1(_dataBase));
 
 			// DELETE! WS messages listening must realized through a method in NEW Base class. I this class all events will be located
 			// Then WS events will invoke public methods of Trade.cs class

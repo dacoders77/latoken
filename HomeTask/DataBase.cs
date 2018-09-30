@@ -26,6 +26,9 @@ namespace BitMEXAssistant
 		private string _sql;
 		private double _sellPrice;
 		private double _buyPrice;
+		private double _profit;
+		private double _rebate;
+		private double _profitTotal;
 
 
 		public DataBase() {
@@ -43,9 +46,6 @@ namespace BitMEXAssistant
 				{
 					conn.Open(); 
 				}
-
-				//string sql = "INSERT INTO trades(date) VALUES ('" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "' )";
-				// SELECT * FROM `trades` WHERE exchange = "777"
 
 				string sql = "SELECT * FROM `trades`";
 				
@@ -74,8 +74,7 @@ namespace BitMEXAssistant
 						conn.Open();
 					}
 
-					//string sql = "INSERT INTO trades(date) VALUES ('" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "' )";
-					sql = String.Format("INSERT INTO `trades` (exchange, rebate_prc, symbol, volume, cl_order_id) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')", "bitmex/hitbtc", 0.025, "ETHUSD", 1, clOrdID);
+					sql = String.Format("INSERT INTO `trades` (exchange, rebate_prc, symbol, volume, cl_order_id) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')", "bitmex/hitbtc", 0.025, "XBTUSD", 1, clOrdID);
 
 					cmd = new MySqlCommand(sql, conn);
 					cmd.ExecuteNonQuery();
@@ -112,7 +111,7 @@ namespace BitMEXAssistant
 			//BitMexProfitCalculate(clOrdID);
 		}
 
-		private void BitMexProfitCalculate(string clOrdID) {
+		public void BitMexProfitCalculate(string clOrdID) {
 
 			// Profit
 			// Read sell price
@@ -137,16 +136,15 @@ namespace BitMEXAssistant
 				object scalarSellPrice = cmd.ExecuteScalar();
 				MessageBox.Show("DataBase.cs line 140. : " + scalarSellPrice);
 
-				if (scalarSellPrice == null)
+				if (scalarSellPrice.GetType() == typeof(DBNull))
 				{
 					_sellPrice = 0;
 				}
 				else {
-					//_sellPrice = Convert.ToDouble(scalarSellPrice);
+					_sellPrice = Convert.ToDouble(scalarSellPrice);
 				}
 
 				conn.Close();
-
 
 
 				if (conn.State == System.Data.ConnectionState.Closed)
@@ -157,44 +155,43 @@ namespace BitMEXAssistant
 				MySqlCommand cmd2 = new MySqlCommand(_sql, conn);
 				object scalarBuyPrice = cmd2.ExecuteScalar();
 				MessageBox.Show("DataBase.cs line 161. : " + scalarBuyPrice);
-				if (scalarBuyPrice == null)
+
+				if (scalarBuyPrice.GetType() == typeof(DBNull))
 				{
 					_buyPrice = 0;
 				}
 				else
 				{
-					//_buyPrice = Convert.ToDouble(scalarBuyPrice);
+					_buyPrice = (double)scalarBuyPrice;
 				}
-				conn.Close();
+				
 
-				//double profit = _sellPrice - _buyPrice;
-				//MessageBox.Show("DataBase.cs line 156. : " + profit);
-			}
-
-			/*
-			// Get buy price
-			using (var conn = new MySqlConnection(connectionString))
-			{
-				if (conn.State == System.Data.ConnectionState.Closed)
+				if (_sellPrice != 0 && _buyPrice != 0)
 				{
-					conn.Open();
+					_profit = _sellPrice - _buyPrice;
+					_rebate = (_sellPrice * 0.025 / 100) + (_buyPrice * 0.025 / 100); // Volume is not calculated!
+					_profitTotal = _profit + _rebate;
+
 				}
-				_sql = string.Format("SELECT symbol FROM trades WHERE buy_price = {0}", clOrdID);
-				MySqlCommand cmd = new MySqlCommand(_sql, conn);
-				object scalarValue = cmd.ExecuteScalar();
-				//MessageBox.Show("DataBase.cs line 136. : " + scalarValue);
-				_buyPrice = (double)scalarValue;
+				else {
+					_profit = 0;
+					_rebate = 0;
+					_profitTotal = 0;
+				}
+				 
+				//MessageBox.Show("DataBase.cs line 186. : " + _profit);
+
+				_sql = string.Format("UPDATE `trades` SET profit = '{0}', rebate_total = '{1}', profit_total = '{2}' where cl_order_id = {3}", _profit, _rebate, _profitTotal, clOrdID);
+				MySqlCommand cmd3 = new MySqlCommand(_sql, conn);
+				cmd3.ExecuteNonQuery();
+
+
+
+
+
 				conn.Close();
+
 			}
-			*/
-
-			
-
-			// Get basket allocated funds. Works good
-			//sqlQueryString = string.Format("SELECT allocated_funds FROM baskets WHERE id = {0}", basketId);
-			//MySqlCommand cmd4 = new MySqlCommand(sqlQueryString, mySqlConnection);
-			//object basketAllocatedFunds = cmd4.ExecuteScalar();
-			//form.basket.UpdateInfoJson(string.Format("basketAllocatedFunds: {0}", basketAllocatedFunds), "volumeCalculate", "calc", requestId); // Update json info feild in DB
 
 
 		}
