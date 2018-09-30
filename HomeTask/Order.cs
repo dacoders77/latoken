@@ -13,11 +13,12 @@ namespace BitMEXAssistant
 	* - Used for execution response parsing. When an order is executed and response received there is no information about its direction and so on. 
 	* Direction is needed for storing information in DB and profit calculation as well as hedge orders opening. 
 	 */
-	class Order
+	public class Order
 	{
 		public string Id { get; set; }
 		public string Status { get; set; }
 		public TradeDirection Direction { get; set; }
+        public decimal Price { get; set; }
 
 		public Order(string id, string status, TradeDirection direction)
 		{
@@ -26,7 +27,4 @@ namespace BitMEXAssistant
 			Direction = direction;
 		}
 	}
-
-
-
 }

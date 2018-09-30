@@ -3,7 +3,7 @@ using System.Linq;
 using BitMEX;
 
 namespace BitMEXAssistant {
-	public class BitmexDataService {
+	public class BitmexDataService : IDataService {
 
 		public ReadOnlyCollection<Instrument> Instruments { get; }
 		public Instrument ActiveInstrument { get; set; } // Get the list of all available symbols

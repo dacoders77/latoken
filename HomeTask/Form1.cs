@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 using BitMEX; // Api class namespace
@@ -22,7 +24,6 @@ namespace BitMEXAssistant
 
         private decimal _balance;
         private OrderBookDataSet _orderBookDataSet;
-        private readonly Timer _scrollTimer = new Timer();
 
         public Form1(DataBase dataBase) 
         {
@@ -30,14 +31,27 @@ namespace BitMEXAssistant
 			_database = dataBase;
 
 			// DOM
-			// таймер для скрола панелей, когда график уезжает за экран
-            _scrollTimer.Tick += ScrollTimerOnTick; // связали событие таймера
-			_scrollTimer.Interval = 4000; // интервал таймера
-            _scrollTimer.Start();
 
-			panel_big.AutoScroll = true; 
-			
-		}
+			panel_big.AutoScroll = true;
+
+            var items = new List<Order> {
+                new Order("test", "New", TradeDirection.Buy),
+                new Order("test1", "New", TradeDirection.Sell),
+                new Order("test2", "Filled", TradeDirection.Sell),
+                new Order("test3", "New", TradeDirection.Buy)
+            };
+
+            var bindingList = new BindingList<Order>();
+            dataGridView1.DataSource = bindingList;
+
+            bindingList.Add(items[0]);
+            bindingList.Add(items[1]);
+            bindingList.Add(items[2]);
+            bindingList.Add(items[3]);
+            dataGridView1.ColumnAdded += (sender, args) => {
+                args.Column.Width = 50;
+            };
+        }
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
@@ -45,12 +59,6 @@ namespace BitMEXAssistant
 		    orderBookControl.PriceStart = 6300; // ETHUSD 200-250. XBTCUSD
 		    orderBookControl.PriceEnd = 6900;
 		    orderBookControl.PriceStep = new decimal(0.5); // XBTCUSD: 0.5, ETHUSD: 0.05
-		}
-
-        private void ScrollTimerOnTick(object sender, EventArgs e) // событие таймера. используем его для подгонки графиков в центр панели, если они уехали за зону видимости
-		{
-		    if (orderBookControl.DataSet != null && orderBookControl.DataSet.Ask.Count > 0)
-		        ScrollToPrice(orderBookControl.DataSet.Ask[0].Price, panel_big);
 		}
 
         private void ScrollToPrice(decimal currentPrice, ScrollableControl panel) {
@@ -74,8 +82,14 @@ namespace BitMEXAssistant
             // nop
         }
 
+        private bool _scrollNeeded = true;
+
         private void OnOrderBookDataSetChanged() {
             orderBookControl.DataSet = _orderBookDataSet;
+            if (_scrollNeeded && _orderBookDataSet != null) {
+                ScrollToPrice(orderBookControl.DataSet.Ask[0].Price, panel_big);
+                _scrollNeeded = false;
+            }
         }
 
         public decimal Balance {
@@ -108,5 +122,10 @@ namespace BitMEXAssistant
 			// Testing the record. DELETE 
 			_database.BitMexProfitCalculate("5604");
 		}
-	}
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e) {
+            orderBookControl.SoundEnabled = checkBox1.Checked;
+            orderBookControl1.SoundEnabled = checkBox1.Checked;
+        }
+    }
 }
