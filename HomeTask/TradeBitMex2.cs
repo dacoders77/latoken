@@ -179,26 +179,24 @@ namespace BitMEXAssistant
 							if (order.ContainsKey((string)TD[0]["orderID"]))
 							{
 								// In some cases an orderStatus can be empty
-								if (TD[0]["ordStatus"] != null)
+								if (TD[0]["ordStatus"] != null) // TD[0]["ordStatus"].ToString() != "Filled"
 								{
-									// Update existing status of the order Filled, Canceled etc. Here we update any status. We don't determine the exact status itself
-									order[(string)TD[0]["orderID"]].Status = (string)TD[0]["ordStatus"];
-									Console.WriteLine("Line 186. Trade.cs. Order: " + order[(string)TD[0]["orderID"]].Id + " Direction: " + order[(string)TD[0]["orderID"]].Direction + " Status: " + order[(string)TD[0]["orderID"]].Status);
+									// Only for statuses except Filled
+									if (TD[0]["ordStatus"].ToString() != "Filled") {
+										// Update existing status of the order Filled, Canceled etc. Here we update any status.
+										// We don't determine the exact status itself
+										order[(string)TD[0]["orderID"]].Status = (string)TD[0]["ordStatus"];
+										Console.WriteLine("Line 186. Trade.cs. Order: " + order[(string)TD[0]["orderID"]].Id + " Direction: " + order[(string)TD[0]["orderID"]].Direction + " Status: " + order[(string)TD[0]["orderID"]].Status);
 
-									// Extract client order ID as a suffix. Get last 4 digits out of the string
-									var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
+										// Extract client order ID as a suffix. Get last 4 digits out of the string
+										var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
 
-									// Add client order id to the DB as a BLUEPRINT
-									// WORKS GOOD!
+										// Add client order id to the DB as a BLUEPRINT
+										// WORKS GOOD!
 
-									MessageBox.Show("TradeBitMex2.cs line 194: clOrdId will be sent to DB: " + clOrdID);
-									_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
-
-								}
-								else
-								{
-									// Delete?
-									Console.WriteLine("Null status value while updating orderId in dictionary. Trade.cs line 192");
+										MessageBox.Show("TradeBitMex2.cs line 194: clOrdId will be sent to DB: " + clOrdID);
+										_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
+									}
 								}
 							}
 						}
@@ -216,15 +214,13 @@ namespace BitMEXAssistant
 						{
 							// If the key is found - update its value. If not - the order has just been placed, add this value to the dictionary
 
-							if ((string)TD[0]["ordStatus"] == "Filled") {
+							if ((string)TD[0]["ordStatus"] == "Filled")
+							{
 								// Extract client order ID as a suffix. Get last 4 digits out of the string
 								Console.WriteLine("TradeBitMext2.cs line 226. TD0 " + TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4));
 
 
 								var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
-
-								Console.WriteLine("TradeBitMext2.cs line 228 ********************************" + clOrdID);
-								
 
 								// Upadate rcord in db: clOrdID, order[TD[0]["orderID"].ToString()].Direction, price, orderID(buy_order_id, sell_order_id)
 								_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
@@ -237,8 +233,6 @@ namespace BitMEXAssistant
 							}
 						}
 					}
-					
-
 				}
 			}
 		}

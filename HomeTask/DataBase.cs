@@ -68,7 +68,6 @@ namespace BitMEXAssistant
 					Console.WriteLine("DataBase.cs line 68. Found");
 				else
 				{
-
 					if (conn.State == System.Data.ConnectionState.Closed)
 					{
 						conn.Open();
@@ -81,7 +80,6 @@ namespace BitMEXAssistant
 
 				}
 					
-
 			}
 
 		}
@@ -108,7 +106,7 @@ namespace BitMEXAssistant
 				}
 				conn.Close();
 			}
-			//BitMexProfitCalculate(clOrdID);
+			BitMexProfitCalculate(clOrdID);
 		}
 
 		public void BitMexProfitCalculate(string clOrdID) {
