@@ -88,7 +88,7 @@ namespace BitMEXAssistant {
 					switch ((string)message["table"]) {
                         case "trade":
 
-							Console.WriteLine("******************************************** " + data.Children().Count());
+							//Console.WriteLine("****" + data.Children().Count()); // Trades are grouped in the message. There may be more than 1 element in data
 
                             var price = (double)data.Children().Last()["price"]; // TD["price"].Value<double>() - correct?
                             var symbol = (string)data.Children().Last()["symbol"];

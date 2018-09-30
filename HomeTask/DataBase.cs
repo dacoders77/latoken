@@ -41,14 +41,12 @@ namespace BitMEXAssistant
 
 			using (var conn = new MySqlConnection(connectionString))
 			{
-				
 				if (conn.State == System.Data.ConnectionState.Closed)
 				{
 					conn.Open(); 
 				}
 
 				string sql = "SELECT * FROM `trades`";
-				
 				MySqlCommand cmd = new MySqlCommand(sql, conn);
 
 				using (MySqlDataReader reader = cmd.ExecuteReader())
@@ -62,9 +60,6 @@ namespace BitMEXAssistant
 						}
 					}
 				}
-
-
-
 
 
 					if (flag)
@@ -96,14 +91,11 @@ namespace BitMEXAssistant
 				}
 				if (direction == TradeDirection.Buy)
 				{
-
 					_sql = string.Format("UPDATE `trades` SET buy_order_id = '{0}', buy_price = {1} where cl_order_id = {2}", orderID, price, clOrdID);
 					using (MySqlCommand cmd = new MySqlCommand(_sql, conn))
 					{
 						cmd.ExecuteNonQuery();
 					}
-
-				
 				}
 				else
 				{
@@ -116,7 +108,9 @@ namespace BitMEXAssistant
 
 				conn.Close();
 			}
-			BitMexProfitCalculate(clOrdID);
+
+			System.Threading.Thread.Sleep(2000); // REMOVE THIS
+			//BitMexProfitCalculate(clOrdID);
 		}
 
 		public void BitMexProfitCalculate(string clOrdID) {
@@ -134,21 +128,18 @@ namespace BitMEXAssistant
 			// Get sell price
 			using (var conn = new MySqlConnection(connectionString))
 			{
-
 				if (conn.State == System.Data.ConnectionState.Closed)
 				{
 					conn.Open();
 				}
 
-
 				_sql = string.Format("SELECT sell_price FROM trades WHERE cl_order_id = {0}", clOrdID);
 				using (MySqlCommand cmd = new MySqlCommand(_sql, conn))
 				{
 					object scalarSellPrice = cmd.ExecuteScalar();
-					MessageBox.Show("DataBase.cs line 140. : " + scalarSellPrice);
+					//MessageBox.Show("DataBase.cs line 140. : " + scalarSellPrice);
 
-
-					if (scalarSellPrice.GetType() == typeof(DBNull))
+					if (scalarSellPrice == null || scalarSellPrice is DBNull)
 					{
 						_sellPrice = 0;
 					}
@@ -157,24 +148,20 @@ namespace BitMEXAssistant
 						_sellPrice = Convert.ToDouble(scalarSellPrice);
 					}
 				}
-
-
 				conn.Close();
-
 
 				if (conn.State == System.Data.ConnectionState.Closed)
 				{
 					conn.Open();
 				}
 
-
 				_sql = string.Format("SELECT buy_price FROM trades WHERE cl_order_id = {0}", clOrdID);
 				using (MySqlCommand cmd2 = new MySqlCommand(_sql, conn))
 				{
 					object scalarBuyPrice = cmd2.ExecuteScalar();
-					MessageBox.Show("DataBase.cs line 161. : " + scalarBuyPrice);
+					//MessageBox.Show("DataBase.cs line 161. : " + scalarBuyPrice);
 
-					if (scalarBuyPrice.GetType() == typeof(DBNull))
+					if (scalarBuyPrice == null || scalarBuyPrice is DBNull)
 					{
 						_buyPrice = 0;
 					}
@@ -189,7 +176,6 @@ namespace BitMEXAssistant
 						_profit = _sellPrice - _buyPrice;
 						_rebate = (_sellPrice * 0.025 / 100) + (_buyPrice * 0.025 / 100); // Volume is not calculated!
 						_profitTotal = _profit + _rebate;
-
 					}
 					else
 					{
@@ -200,44 +186,13 @@ namespace BitMEXAssistant
 
 				}
 
-
-
-
-
 				_sql = string.Format("UPDATE `trades` SET profit = '{0}', rebate_total = '{1}', profit_total = '{2}' where cl_order_id = {3}", _profit, _rebate, _profitTotal, clOrdID);
 				using (MySqlCommand cmd3 = new MySqlCommand(_sql, conn))
 				{
 					cmd3.ExecuteNonQuery();
 				}
-
-
 				conn.Close();
-
 			}
-
-
-		}
-
-
-
-
-		public void AddBuyOrder() {
-
-		}
-
-		public void AddSellOrder()
-		{
-
-		}
-
-		public void AddHedgeBuyOrder()
-		{
-
-		}
-
-		public void AddHedgeSellOrder()
-		{
-
 		}
 	}
 }
