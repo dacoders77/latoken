@@ -182,7 +182,7 @@ namespace BitMEXAssistant {
 
         public void AddTrade(TradeData data) {
 
-			//Console.WriteLine("OrderBookControl.cs line 184: " + data.Direction + " " + data.Price + " " + data.Volume);
+			Console.WriteLine("OrderBookControl.cs line 184: " + data.Direction + " " + data.Price + " " + data.Volume);
 
             if (_ticks.Count > _pointsGraphCount)
                 _ticks.RemoveAt(0);

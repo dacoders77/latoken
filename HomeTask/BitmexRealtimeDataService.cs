@@ -87,6 +87,9 @@ namespace BitMEXAssistant {
 
 					switch ((string)message["table"]) {
                         case "trade":
+
+							Console.WriteLine("******************************************** " + data.Children().Count());
+
                             var price = (double)data.Children().Last()["price"]; // TD["price"].Value<double>() - correct?
                             var symbol = (string)data.Children().Last()["symbol"];
                             var volume = (double)data.Children().Last()["size"];

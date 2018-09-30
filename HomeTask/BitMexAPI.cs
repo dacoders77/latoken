@@ -252,6 +252,7 @@ namespace BitMEX
 			param["symbol"] = Symbol;
 			param["side"] = Side;
 			param["orderQty"] = Quantity.ToString();
+			//param["displayQty"] = Quantity.ToString(); // Display order quantity can be different and shown in a separate column at the web site
 			param["ordType"] = "Limit";
 			param["price"] = Price.ToString().Replace(",", ".");
 			param["clOrdID"] = clOrdID;

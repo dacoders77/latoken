@@ -195,7 +195,16 @@ namespace BitMEXAssistant
 										// WORKS GOOD!
 
 										MessageBox.Show("TradeBitMex2.cs line 194: clOrdId will be sent to DB: " + clOrdID);
-										_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
+
+										try
+										{
+											_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
+										}
+										catch (Exception ex)
+										{
+											Console.WriteLine("TradeBitMex2.cs line 205. Exception thrown: " + ex);
+										}
+										
 									}
 								}
 							}
@@ -222,8 +231,15 @@ namespace BitMEXAssistant
 
 								var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
 
-								// Upadate rcord in db: clOrdID, order[TD[0]["orderID"].ToString()].Direction, price, orderID(buy_order_id, sell_order_id)
-								_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
+								try
+								{
+									_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
+								}
+								catch (Exception ex)
+								{
+									Console.WriteLine("TradeBitMex2.cs line 205. Exception thrown: " + ex);
+								}
+								
 
 								//foreach (KeyValuePair<string, Order> entry in order)
 								//{
