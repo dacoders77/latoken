@@ -57,17 +57,20 @@ namespace BitMEXAssistant
 							Random rnd = new Random();
 							string suffix = rnd.Next(1000, 10000).ToString(); // We use one Client order id to put in both sell and buy orders. The first part of this Id changes all the time. The last part - stays the same. This is because the exchange does not allow to have the same Client order ids
 
+							//Console.WriteLine("TradeBitMex2.cs. openNewPairOrderEnabled: " + openNewPairOrderEnabled);
+
 							// Place sell order
 							if (!activeSellOrder && openNewPairOrderEnabled)
 							{
 								
 								sellLimitPrice = (Double)TD[0]["asks"][0][0] + _limitPriceShift;
-								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Sell", 1, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
-								MessageBox.Show(response);
+								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Sell", 10, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+								//MessageBox.Show(response);
+
+								sellOrderId = JObject.Parse(response)["orderID"].ToString();
 								//Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
 								//Console.WriteLine(response);
 
-								sellOrderId = JObject.Parse(response)["orderID"].ToString();
 
 								order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Sell));
 								activeSellOrder = true; // Set flag to true when the order is opened 
@@ -79,8 +82,9 @@ namespace BitMEXAssistant
 							{
 								
 								buyLimitPrice = (Double)TD[0]["bids"][0][0] - _limitPriceShift;
-								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Buy", 1, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
-								MessageBox.Show(response);
+								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Buy", 10, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+								//MessageBox.Show(response);
+
 								buyOrderId = JObject.Parse(response)["orderID"].ToString();
 								//Console.WriteLine("------------ Place order response. TradeBitMex2.cs");
 								//Console.WriteLine(response);
@@ -90,30 +94,15 @@ namespace BitMEXAssistant
 								
 							}
 
-							openNewPairOrderEnabled = false; // When BUY and SELL orders are open wait untill the position is closed
-															 //Console.WriteLine("Order status: " + orderStatuses[sellOrderId]);
-
-							// New orders flags
-							if (order[sellOrderId].Status == "Filled")
-							{
-								System.Threading.Thread.Sleep(2000); // Sleep untill new order is placed. REMOVE THIS
-								activeSellOrder = false;
-							}
-
-							if (order[buyOrderId].Status == "Filled")
-							{
-								System.Threading.Thread.Sleep(2000); // Sleep untill new order is placed. REMOVE THIS
-								activeBuyOrder = false;
-							}
+							// When BUY and SELL orders are filled wait untill the whole position is closed. Both orders are filled
+							openNewPairOrderEnabled = false; 
 
 
-
-							// When BUY and SELL orders are filled (position closed) - allow to place new orders (open a new position)
-							//Console.WriteLine(!activeSellOrder + " " + !activeBuyOrder);
+							// When BUY and SELL orders are filled (both orders in a position are osed) - allow to place new pair of orders (open a new position)
 							if (!activeSellOrder && !activeBuyOrder)
 							{
 								openNewPairOrderEnabled = true;
-								//MessageBox.Show("Both filled! " + openNewPairOrderEnabled);
+								//.Show("Both filled! " + openNewPairOrderEnabled);
 							}
 
 
@@ -134,7 +123,7 @@ namespace BitMEXAssistant
 										sellLimitPrice = (Double)TD[0]["asks"][0][0] + _limitPriceShift;
 
 										string response = _bitmexDataService.Api.AmendOrder(sellOrderId, sellLimitPrice);
-										//Console.WriteLine("-------------------------- SELL order has moved! Amend it!: " + response);
+										Console.WriteLine("-------------------------- SELL order has moved! Amend it!: " + response);
 									}
 								}
 							}
@@ -165,9 +154,9 @@ namespace BitMEXAssistant
 				}
 
 				// When order statuses are received. Filled, amended, cancel etc.
-				if ((string)message["table"] == "order")
+				else if ((string)message["table"] == "order")
 				{
-					Console.WriteLine("############" + message);
+					//Console.WriteLine("############" + message);
 
 					if (message.ContainsKey("data"))
 					{
@@ -175,26 +164,47 @@ namespace BitMEXAssistant
 						if (TD.Any())
 						{
 
-							// If the key is found - update its value. If not - the order has just been placed, add this value to the dictionary
+							// If the key is found in order dictionary - update its value
 							if (order.ContainsKey((string)TD[0]["orderID"]))
 							{
+								
 								// In some cases an orderStatus can be empty
-								if (TD[0]["ordStatus"] != null) // TD[0]["ordStatus"].ToString() != "Filled"
+								if (TD[0]["ordStatus"] != null) 
 								{
+
+
+									// Update existing status of the order Filled. Canceled, New etc. statuses are not taken into the account
+									order[(string)TD[0]["orderID"]].Status = (string)TD[0]["ordStatus"];
+
+									// STATUSES FOR NEW ORDER PAIR OPEN
+									// New orders flags
+
+									if (order[sellOrderId].Status == "Filled")
+									{
+										activeSellOrder = false;
+										System.Threading.Thread.Sleep(2000); // Sleep untill new order is placed. REMOVE THIS
+									}
+
+									if (order[buyOrderId].Status == "Filled")
+									{
+										activeBuyOrder = false;
+										System.Threading.Thread.Sleep(2000); // Sleep untill new order is placed. REMOVE THIS
+									}
+
+							
+
+
 									// Only for statuses except Filled
 									if (TD[0]["ordStatus"].ToString() != "Filled") {
-										// Update existing status of the order Filled, Canceled etc. Here we update any status.
-										// We don't determine the exact status itself
-										order[(string)TD[0]["orderID"]].Status = (string)TD[0]["ordStatus"];
-										Console.WriteLine("Line 186. Trade.cs. Order: " + order[(string)TD[0]["orderID"]].Id + " Direction: " + order[(string)TD[0]["orderID"]].Direction + " Status: " + order[(string)TD[0]["orderID"]].Status);
+
+									
+
 
 										// Extract client order ID as a suffix. Get last 4 digits out of the string
 										var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
 
 										// Add client order id to the DB as a BLUEPRINT
-										// WORKS GOOD!
-
-										MessageBox.Show("TradeBitMex2.cs line 194: clOrdId will be sent to DB: " + clOrdID);
+										// WORKS GOOD
 
 										try
 										{
@@ -221,13 +231,14 @@ namespace BitMEXAssistant
 						JArray TD = (JArray)message["data"];
 						if (TD.Any())
 						{
-							// If the key is found - update its value. If not - the order has just been placed, add this value to the dictionary
 
 							if ((string)TD[0]["ordStatus"] == "Filled")
 							{
-								// Extract client order ID as a suffix. Get last 4 digits out of the string
-								Console.WriteLine("TradeBitMext2.cs line 226. TD0 " + TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4));
+								//order[TD[0]["orderID"].ToString()].Status = "Filled";
 
+
+								// Extract client order ID as a suffix. Get last 4 digits out of the string
+								//Console.WriteLine("TradeBitMext2.cs line 226. TD0 " + TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4));
 
 								var clOrdID = TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4);
 

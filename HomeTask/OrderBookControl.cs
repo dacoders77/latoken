@@ -21,7 +21,7 @@ namespace BitMEXAssistant {
 
         private readonly int _markSize1 = 6; // 3 sizes of circles for 3 volume groups
         private readonly int _markSize2 = 16;
-        private readonly int _markSize3 = 36;
+        private readonly int _markSize3 = 31;
 
         private readonly int _pointsGraphCount = 38; // The quantity of points used for rendering the chart
         private readonly int _pointsGraphStep = 30; // Points horisontal step 
@@ -182,7 +182,7 @@ namespace BitMEXAssistant {
 
         public void AddTrade(TradeData data) {
 
-			Console.WriteLine("OrderBookControl.cs line 184: " + data.Direction + " " + data.Price + " " + data.Volume);
+			//Console.WriteLine("OrderBookControl.cs line 184: " + data.Direction + " " + data.Price + " " + data.Volume);
 
             if (_ticks.Count > _pointsGraphCount)
                 _ticks.RemoveAt(0);
