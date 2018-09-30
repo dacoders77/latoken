@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 
 using BitMEX; // Api class namespace
@@ -22,7 +26,8 @@ namespace BitMEXAssistant
 
         private decimal _balance;
         private OrderBookDataSet _orderBookDataSet;
-        private readonly Timer _scrollTimer = new Timer();
+
+       
 
         public Form1(DataBase dataBase) 
         {
@@ -30,14 +35,13 @@ namespace BitMEXAssistant
 			_database = dataBase;
 
 			// DOM
-			// таймер для скрола панелей, когда график уезжает за экран
-            _scrollTimer.Tick += ScrollTimerOnTick; // связали событие таймера
-			_scrollTimer.Interval = 4000; // интервал таймера
-            _scrollTimer.Start();
 
-			panel_big.AutoScroll = true; 
-			
-		}
+			panel_big.AutoScroll = true;
+
+            dataGridView1.ColumnAdded += (sender, args) => {
+                args.Column.Width = 50;
+            };
+        }
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
@@ -45,12 +49,6 @@ namespace BitMEXAssistant
 		    orderBookControl.PriceStart = 6300; // ETHUSD 200-250. XBTCUSD
 		    orderBookControl.PriceEnd = 6900;
 		    orderBookControl.PriceStep = new decimal(0.5); // XBTCUSD: 0.5, ETHUSD: 0.05
-		}
-
-        private void ScrollTimerOnTick(object sender, EventArgs e) // событие таймера. используем его для подгонки графиков в центр панели, если они уехали за зону видимости
-		{
-		    if (orderBookControl.DataSet != null && orderBookControl.DataSet.Ask.Count > 0)
-		        ScrollToPrice(orderBookControl.DataSet.Ask[0].Price, panel_big);
 		}
 
         private void ScrollToPrice(decimal currentPrice, ScrollableControl panel) {
@@ -74,8 +72,21 @@ namespace BitMEXAssistant
             // nop
         }
 
+        private bool _scrollNeeded = true;
+        private ReadOnlyCollection<Order> _orders;
+
         private void OnOrderBookDataSetChanged() {
             orderBookControl.DataSet = _orderBookDataSet;
+            if (_scrollNeeded && _orderBookDataSet != null) {
+                ScrollToPrice(orderBookControl.DataSet.Ask[0].Price, panel_big);
+                _scrollNeeded = false;
+            }
+        }
+
+        private void OnOrdersChanged(IReadOnlyCollection<Order> orders) {
+            dataGridView1.DataSource = orders;
+
+            orderBookControl.ActiveOrders = orders.Where(o => o.Status == "New").ToList();
         }
 
         public decimal Balance {
@@ -102,11 +113,27 @@ namespace BitMEXAssistant
             }
         }
 
-		// TEST. DELETE
-		private void button2_Click(object sender, EventArgs e)
+        public ReadOnlyCollection<Order> Orders {
+            get { return _orders; }
+            set {
+                _orders = value;
+
+                OnOrdersChanged(_orders);
+            }
+        }
+
+       
+
+        // TEST. DELETE
+        private void button2_Click(object sender, EventArgs e)
 		{
 			// Testing the record. DELETE 
 			_database.BitMexProfitCalculate("5604");
 		}
-	}
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e) {
+            orderBookControl.SoundEnabled = checkBox1.Checked;
+            orderBookControl1.SoundEnabled = checkBox1.Checked;
+        }
+    }
 }

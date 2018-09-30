@@ -10,7 +10,7 @@ namespace BitMEXAssistant
 {
 	// Fresh copy of TradeBitMex.cs class which later will be deprecated
 
-	class TradeBitMex2
+	public class TradeBitMex2
 	{
 		private BitmexRealtimeDataService _bitmexRealtimeDataService;
 
@@ -32,6 +32,7 @@ namespace BitMEXAssistant
 
 		private Dictionary<string, Order> order; // The same as order statuses but contains Order object as the value
 
+        public IEnumerable<Order> Orders { get { return order.Values; } }
 
 		public TradeBitMex2(BitmexRealtimeDataService bitmexRealtimeDataService, BitmexDataService bitmexDataService, double limitPriceShift) {
 
@@ -39,9 +40,12 @@ namespace BitMEXAssistant
 			_bitmexRealtimeDataService = bitmexRealtimeDataService;
 			_bitmexDataService = bitmexDataService;
 			order = new Dictionary<string, Order>();
+
+		    _bitmexDataService.WebSocket.Message += orderBookRecevied;
 		}
 
-		public void orderBookRecevied(EventArgs<string> e) {
+
+		private void orderBookRecevied(object sender, EventArgs<string> e) {
 
 			var message = JObject.Parse(e.Data);
 			
@@ -75,6 +79,7 @@ namespace BitMEXAssistant
 								order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Sell));
 								activeSellOrder = true; // Set flag to true when the order is opened 
 							
+                                OnOrdersChanged();
 							}
 
 							// Place buy order
@@ -91,8 +96,9 @@ namespace BitMEXAssistant
 
 								order.Add(buyOrderId, new Order(buyOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Buy));
 								activeBuyOrder = true; // Set flag to true when the order is opened 
-								
-							}
+
+							    OnOrdersChanged();
+                            }
 
 							// When BUY and SELL orders are filled wait untill the whole position is closed. Both orders are filled
 							openNewPairOrderEnabled = false; 
@@ -176,26 +182,24 @@ namespace BitMEXAssistant
 									// Update existing status of the order Filled. Canceled, New etc. statuses are not taken into the account
 									order[(string)TD[0]["orderID"]].Status = (string)TD[0]["ordStatus"];
 
-									// STATUSES FOR NEW ORDER PAIR OPEN
-									// New orders flags
 
-									if (order[sellOrderId].Status == "Filled")
+                                    // STATUSES FOR NEW ORDER PAIR OPEN
+                                    // New orders flags
+
+                                    if (order[sellOrderId].Status == "Filled")
 									{
 										activeSellOrder = false;
-										System.Threading.Thread.Sleep(2000); // Sleep untill new order is placed. REMOVE THIS
 									}
 
 									if (order[buyOrderId].Status == "Filled")
 									{
 										activeBuyOrder = false;
-										System.Threading.Thread.Sleep(2000); // Sleep untill new order is placed. REMOVE THIS
 									}
 
-							
+								    OnOrdersChanged();
 
-
-									// Only for statuses except Filled
-									if (TD[0]["ordStatus"].ToString() != "Filled") {
+                                    // Only for statuses except Filled
+                                    if (TD[0]["ordStatus"].ToString() != "Filled") {
 
 									
 
@@ -263,5 +267,9 @@ namespace BitMEXAssistant
 				}
 			}
 		}
+
+	    public event EventHandler<EventArgs> OrdersChanged;
+
+        protected virtual void OnOrdersChanged() => OrdersChanged?.Invoke(this, EventArgs.Empty);
 	}
 }

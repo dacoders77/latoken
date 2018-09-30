@@ -13,9 +13,8 @@ namespace BitMEXAssistant {
     public class OrderBookControl : Control {
         private readonly int _chartWidth = 400; // Horizontal coordinate. Location on X axis. Width of the field on which the chart is rendered
 		private readonly int _verticalPriceBarInterval = 4; // Price bars vertical interval. The length between price bars
-        private readonly int _orderBackgroundWidth = 84; // Order background width. We don't know how many digits are in the price of traded symbol. Based on this value the width of the DOM is calculated
+        private readonly int _orderBackgroundWidth = 54; // Order background width. We don't know how many digits are in the price of traded symbol. Based on this value the width of the DOM is calculated
 		private readonly int _backGroundReduction = 0; // Background size reduction. The value on which the background of the price bar is reduced. Negative value will expand the background
-        private readonly bool showBorder = false; 
         private readonly int _volumeSizeThreshold1 = 10; // Volume size circles thresholds. There are 3 sizes: 1st < 1st threshold. 2nd: > 1st < 2rd. 3rd: > 2nd
         private readonly int _volumeSizeThreshold2 = 100;
 
@@ -37,10 +36,11 @@ namespace BitMEXAssistant {
 
         private decimal _priceStart; // Visble DOM stack starting price
         private decimal _priceEnd; // Ending price
-        private decimal _priceStep = new decimal(); // Price bar step. ETHUSD: 0.1, XBTCUSD: 1
+        private decimal _priceStep; // Price bar step. ETHUSD: 0.1, XBTCUSD: 1
 
 
         private readonly SoundPlayer _tradeSound; // The sound played when a trade is being executed
+        private List<Order> _activeOrders;
 
         public OrderBookControl() {
             DoubleBuffered = true;
@@ -119,10 +119,10 @@ namespace BitMEXAssistant {
                 g.DrawString(p.ToString(CultureInfo.CurrentCulture), Font, Brushes.LightGray, _chartWidth, GetY(p, fontHeight) - fontHeight / 2);
             }
 
-			// Price bar background width calculation 
-            var priceBarBackGroundWidth = _orderBackgroundWidth + (int)g.MeasureString(dataSet.Ask[0].Price.ToString(), Font).Width;
-
 		    var maxVolume = Math.Max(dataSet.Ask.Max(d => d.Volume), dataSet.Bid.Max(d => d.Volume));
+
+            // Price bar background width calculation 
+            var priceBarBackGroundWidth = _orderBackgroundWidth + (int)g.MeasureString(maxVolume.ToString(), Font).Width;
 
 		    // Render ask (uppder) part of the DOM
             foreach (var record in dataSet.Ask)
@@ -131,7 +131,12 @@ namespace BitMEXAssistant {
 			// Draw bid (lower) part of the DOM
             foreach (var record in dataSet.Bid)
                 DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LimeGreen, maxVolume);
-        }
+
+            if(ActiveOrders != null)
+		        foreach (var activeOrder in ActiveOrders) {
+		            g.DrawRectangle(Pens.Black, _chartWidth, GetY(activeOrder.Price, fontHeight) - fontHeight / 2, priceBarBackGroundWidth, fontHeight - _backGroundReduction);
+		        }
+		}
 
         private void DrawPriceBarRow(Graphics g, OrderBookRecord record, int priceBarBackGroundWidth, int fontHeight, Brush baseBackground, int maxVolume) {
 			// Calculate width and color of the small bar, which represents volume in a whole price bar (price row)
@@ -151,14 +156,6 @@ namespace BitMEXAssistant {
 			// Price bar price + volume
             g.DrawString(record.Price.ToString(), Font, Brushes.Black, _chartWidth, y);
             g.DrawString(record.Volume.ToString(), Font, Brushes.Black, _chartWidth + _orderBackgroundWidth, y);
-
-            if (showBorder)
-                g.DrawRectangle(
-                    Pens.Black,
-                    _chartWidth,
-                    y + _backGroundReduction / 2,
-                    (int)g.MeasureString(record.Price + "  " + record.Volume, Font).Width + _verticalPriceBarInterval, // TODO check it! Whether it missplaced or not!
-                    fontHeight - _backGroundReduction);
         }
 
         private static Brush GetPriceBarColumnBrush(int volume, int maxVolume) {
@@ -203,7 +200,8 @@ namespace BitMEXAssistant {
                 _ticks[i].Position = new Point(_ticks[i].Position.X - _pointsGraphStep, _ticks[i].Position.Y);
             }
 
-            //_tradeSound.Play(); // Play sound in each tick 
+            if (SoundEnabled)
+                _tradeSound.Play(); // Play sound in each tick 
             
             Invalidate();
         }
@@ -283,7 +281,18 @@ namespace BitMEXAssistant {
                 _priceStep = value;
                 UpdateHeight();
             }
-        } 
+        }
+
+        public bool SoundEnabled { get; set; } = true;
+
+        public List<Order> ActiveOrders {
+            get { return _activeOrders; }
+            set {
+                _activeOrders = value; 
+
+                Invalidate();
+            }
+        }
 
         private class Tick {
             public Point Position { get; set; }
