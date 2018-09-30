@@ -15,7 +15,6 @@ namespace BitMEXAssistant {
 		private readonly int _verticalPriceBarInterval = 4; // Price bars vertical interval. The length between price bars
         private readonly int _orderBackgroundWidth = 54; // Order background width. We don't know how many digits are in the price of traded symbol. Based on this value the width of the DOM is calculated
 		private readonly int _backGroundReduction = 0; // Background size reduction. The value on which the background of the price bar is reduced. Negative value will expand the background
-        private readonly bool showBorder = false; 
         private readonly int _volumeSizeThreshold1 = 10; // Volume size circles thresholds. There are 3 sizes: 1st < 1st threshold. 2nd: > 1st < 2rd. 3rd: > 2nd
         private readonly int _volumeSizeThreshold2 = 100;
 
@@ -41,6 +40,7 @@ namespace BitMEXAssistant {
 
 
         private readonly SoundPlayer _tradeSound; // The sound played when a trade is being executed
+        private List<Order> _activeOrders;
 
         public OrderBookControl() {
             DoubleBuffered = true;
@@ -132,11 +132,11 @@ namespace BitMEXAssistant {
             foreach (var record in dataSet.Bid)
                 DrawPriceBarRow(g, record, priceBarBackGroundWidth, fontHeight, Brushes.LimeGreen, maxVolume);
 
-		    foreach (var activeOrder in ActiveOrders) {
-		        g.DrawRectangle(Pens.Black, _chartWidth, GetY(activeOrder.Price, fontHeight) - fontHeight / 2, priceBarBackGroundWidth, fontHeight - _backGroundReduction);
-
-            }
-        }
+            if(ActiveOrders != null)
+		        foreach (var activeOrder in ActiveOrders) {
+		            g.DrawRectangle(Pens.Black, _chartWidth, GetY(activeOrder.Price, fontHeight) - fontHeight / 2, priceBarBackGroundWidth, fontHeight - _backGroundReduction);
+		        }
+		}
 
         private void DrawPriceBarRow(Graphics g, OrderBookRecord record, int priceBarBackGroundWidth, int fontHeight, Brush baseBackground, int maxVolume) {
 			// Calculate width and color of the small bar, which represents volume in a whole price bar (price row)
@@ -285,10 +285,14 @@ namespace BitMEXAssistant {
 
         public bool SoundEnabled { get; set; } = true;
 
-        public List<Order> ActiveOrders { get; } = new List<Order>() {
-            new Order("a", "b", TradeDirection.Buy) {Price = 6300},
-            new Order("a", "b", TradeDirection.Buy) {Price = 6350},
-        };
+        public List<Order> ActiveOrders {
+            get { return _activeOrders; }
+            set {
+                _activeOrders = value; 
+
+                Invalidate();
+            }
+        }
 
         private class Tick {
             public Point Position { get; set; }

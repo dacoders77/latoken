@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 
 using BitMEX; // Api class namespace
@@ -25,6 +27,8 @@ namespace BitMEXAssistant
         private decimal _balance;
         private OrderBookDataSet _orderBookDataSet;
 
+       
+
         public Form1(DataBase dataBase) 
         {
 			InitializeComponent();
@@ -34,20 +38,6 @@ namespace BitMEXAssistant
 
 			panel_big.AutoScroll = true;
 
-            var items = new List<Order> {
-                new Order("test", "New", TradeDirection.Buy),
-                new Order("test1", "New", TradeDirection.Sell),
-                new Order("test2", "Filled", TradeDirection.Sell),
-                new Order("test3", "New", TradeDirection.Buy)
-            };
-
-            var bindingList = new BindingList<Order>();
-            dataGridView1.DataSource = bindingList;
-
-            bindingList.Add(items[0]);
-            bindingList.Add(items[1]);
-            bindingList.Add(items[2]);
-            bindingList.Add(items[3]);
             dataGridView1.ColumnAdded += (sender, args) => {
                 args.Column.Width = 50;
             };
@@ -83,6 +73,7 @@ namespace BitMEXAssistant
         }
 
         private bool _scrollNeeded = true;
+        private ReadOnlyCollection<Order> _orders;
 
         private void OnOrderBookDataSetChanged() {
             orderBookControl.DataSet = _orderBookDataSet;
@@ -90,6 +81,12 @@ namespace BitMEXAssistant
                 ScrollToPrice(orderBookControl.DataSet.Ask[0].Price, panel_big);
                 _scrollNeeded = false;
             }
+        }
+
+        private void OnOrdersChanged(IReadOnlyCollection<Order> orders) {
+            dataGridView1.DataSource = orders;
+
+            orderBookControl.ActiveOrders = orders.Where(o => o.Status == "New").ToList();
         }
 
         public decimal Balance {
@@ -116,8 +113,19 @@ namespace BitMEXAssistant
             }
         }
 
-		// TEST. DELETE
-		private void button2_Click(object sender, EventArgs e)
+        public ReadOnlyCollection<Order> Orders {
+            get { return _orders; }
+            set {
+                _orders = value;
+
+                OnOrdersChanged(_orders);
+            }
+        }
+
+       
+
+        // TEST. DELETE
+        private void button2_Click(object sender, EventArgs e)
 		{
 			// Testing the record. DELETE 
 			_database.BitMexProfitCalculate("5604");

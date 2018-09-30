@@ -11,8 +11,7 @@ namespace BitMEXAssistant {
     public class BitmexRealtimeDataService : WSEvents {
 
         private readonly IDataService _dataService;
-		private TradeBitMex2 _tradeBitMex2;
-		private TradeBitMex2 _tradeBitMex3; // Works good
+
 
 		private string _symbol; 
 
@@ -26,8 +25,7 @@ namespace BitMEXAssistant {
             _dataService.WebSocket.Message += WebSocketOnMessage;
             _dataService.WebSocket.Error += WebSocketOnError;
 
-			//_tradeBitMex2 = new TradeBitMex2(this, _dataService, 0); // Create the reading class + set up order book limit orders shift (0, 0.5. 1 ..)
-			//_tradeBitMex3 = new TradeBitMex2(this, _dataService, 1); // Works good
+			
 
 			InitializeSymbolSpecificData(true);
         }
@@ -51,7 +49,7 @@ namespace BitMEXAssistant {
             }
 
             // Subscribe to orders statuses
-            //_dataService.WebSocket.Send("{\"op\": \"subscribe\", \"args\": [\"order\"]}");
+            _dataService.WebSocket.Send("{\"op\": \"subscribe\", \"args\": [\"order\"]}");
 
             // Subscribe to orderbook
             _dataService.WebSocket.Send("{\"op\": \"subscribe\", \"args\": [\"orderBook10:" + _symbol + "\"]}");
@@ -81,9 +79,6 @@ namespace BitMEXAssistant {
                     var data = (JArray)message["data"];
                     if (!data.Any())
                         return;
-
-					//_tradeBitMex2.orderBookRecevied(e); // Call trade class methid for orders placement
-					//_tradeBitMex3.orderBookRecevied(e);
 
 					switch ((string)message["table"]) {
                         case "trade":
