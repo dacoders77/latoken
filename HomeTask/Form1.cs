@@ -121,12 +121,11 @@ namespace BitMEXAssistant
         private void button2_Click(object sender, EventArgs e)
 		{
 			// Testing the record. DELETE 
-			_database.BitMexProfitCalculate("5604");
+			//_database.BitMexProfitCalculate("5604");
 		}
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e) {
             orderBookControl.SoundEnabled = checkBox1.Checked;
-            orderBookControl1.SoundEnabled = checkBox1.Checked;
         }
     }
 }

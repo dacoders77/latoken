@@ -12,7 +12,8 @@ namespace BitMEXAssistant
 
 	public class TradeBitMex2
 	{
-		private BitmexRealtimeDataService _bitmexRealtimeDataService;
+		private BitmexRealtimeDataService _bitmexRealtimeDataService; // Bitmex websocket listeners
+		private HitBtcRealtimeDataService _hitBtcRealtimeDataService;
 
 		private BitmexDataService _bitmexDataService;
 
@@ -34,18 +35,25 @@ namespace BitMEXAssistant
 
         public IEnumerable<Order> Orders { get { return order.Values; } }
 
-		public TradeBitMex2(BitmexRealtimeDataService bitmexRealtimeDataService, BitmexDataService bitmexDataService, double limitPriceShift) {
+		public TradeBitMex2(BitmexRealtimeDataService bitmexRealtimeDataService, HitBtcRealtimeDataService hitBtcRealtimeDataService, BitmexDataService bitmexDataService, double limitPriceShift) {
 
 			_limitPriceShift = limitPriceShift;
+
 			_bitmexRealtimeDataService = bitmexRealtimeDataService;
 			_bitmexDataService = bitmexDataService;
-			order = new Dictionary<string, Order>();
+
+			_hitBtcRealtimeDataService = hitBtcRealtimeDataService;
+			// We don't use HitBtcDataService because at HitBtc orders are sent via websocket
 
 		    _bitmexDataService.WebSocket.Message += orderBookRecevied;
+			// We dont use any events because we use only market orders placement at HitBtc
+
+			order = new Dictionary<string, Order>();
 		}
 
 
 		private void orderBookRecevied(object sender, EventArgs<string> e) {
+
 
 			var message = JObject.Parse(e.Data);
 			
@@ -239,9 +247,7 @@ namespace BitMEXAssistant
 
 							if ((string)TD[0]["ordStatus"] == "Filled")
 							{
-								//order[TD[0]["orderID"].ToString()].Status = "Filled";
-
-
+							
 								// Extract client order ID as a suffix. Get last 4 digits out of the string
 								//Console.WriteLine("TradeBitMext2.cs line 226. TD0 " + TD[0]["clOrdID"].ToString().Substring(TD[0]["clOrdID"].ToString().Length - 4));
 
@@ -251,6 +257,9 @@ namespace BitMEXAssistant
 								{
 									System.Threading.Thread.Sleep(500); // DELETE! Only for testing
 									_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
+
+									// Open a hedge position on HitBtc
+									_hitBtcRealtimeDataService.HitBtcHedgePositionOpen(clOrdID, order[TD[0]["orderID"].ToString()].Direction);
 								}
 								catch (Exception ex)
 								{

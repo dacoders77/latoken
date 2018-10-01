@@ -19,7 +19,7 @@ namespace BitMEXAssistant
 
 		private static DataBase _dataBase;
 	    private static TradeBitMex2 _tradeBitMex2;
-		//private static TradeBitMex2 _tradeBitMex3; // Works good
+		private static TradeBitMex2 _tradeBitMex3; // Works good
 
 		
 
@@ -38,7 +38,7 @@ namespace BitMEXAssistant
 			_bitmexRealtimeDataService = new BitmexRealtimeDataService(_bitmexDataService, "ETHUSD"); // + Trading symbol ETHUSD / XBTUSD
 
 			_hitBtcDataService = new HitBtcDataService(TradinServer.Real); // DB instance is not passed as the parameter. The only DB is used in BitmexDataService 
-			_hitBtcRealtimeDataService = new HitBtcRealtimeDataService(_hitBtcDataService, "ETHUSD");
+			_hitBtcRealtimeDataService = new HitBtcRealtimeDataService(_hitBtcDataService, _dataBase, "ETHUSD"); // We send database class instance in order to update DB records when hedge market orders are filled in such events are triggered in HitBtc websocket event listener
 
 
 			// Hit btc connection shall be performed like that:
@@ -48,8 +48,8 @@ namespace BitMEXAssistant
 			// // Create the reading class + set up order book limit orders shift 
 			// XBTUSD: 0, 0.5. 1 ..
 			// ETHUSD: 0.05, 0,1, 0,15
-			_tradeBitMex2 = new TradeBitMex2(_bitmexRealtimeDataService, _bitmexDataService, 0.05); 
-		    //_tradeBitMex3 = new TradeBitMex2(_bitmexRealtimeDataService, _bitmexDataService, 1); // Works good
+			_tradeBitMex2 = new TradeBitMex2(_bitmexRealtimeDataService, _hitBtcRealtimeDataService, _bitmexDataService, 0.05); // ETHUSD 0.05 Dom price offset. 0 - at the best bid/ask
+		    //_tradeBitMex3 = new TradeBitMex2(_bitmexRealtimeDataService, _hitBtcRealtimeDataService, _bitmexDataService, 0.1); // Works good
 
 		    _mainController = new MainController(_bitmexRealtimeDataService, _hitBtcRealtimeDataService, _mainForm = new Form1(_dataBase), new[] { _tradeBitMex2 });
 

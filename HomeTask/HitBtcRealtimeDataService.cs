@@ -11,19 +11,21 @@ namespace BitMEXAssistant
 	* Rest API is not used at HitBtc exchange. Orders are sent through websocket stream via websocket.send
 	* Websocket events like onTrade, onOrderBookChanged etc. are inherited from WSEvents inerface
 	* The same inheritance is used in other realtime class - BitMexRealtimeDataService.cs
+	* Database instance is used for updating records in DB when hedge market orders are filled
 	*/
 
 	public class HitBtcRealtimeDataService : WSEvents
 	{
 
 		private readonly IDataService _dataService;
-
+		private readonly DataBase _dataBase;
 		private string _symbol;
 
-		public HitBtcRealtimeDataService(IDataService dataService, string symbol)
+		public HitBtcRealtimeDataService(IDataService dataService, DataBase dataBase, string symbol)
 		{
 			_dataService = dataService;
 			_symbol = symbol;
+			_dataBase = dataBase;
 		}
 
 		public void Initialize()
@@ -41,19 +43,19 @@ namespace BitMEXAssistant
 			_dataService.WebSocket.Send("{\"method\": \"subscribeReports\", \"params\": {} } "); // Works good
 
 			// Subscribe to ticker
-			_dataService.WebSocket.Send("{\"method\": \"subscribeTicker\", \"params\": {\"symbol\": \"ETHBTC\"},\"id\": 123 } "); // Works good
+			//_dataService.WebSocket.Send("{\"method\": \"subscribeTicker\", \"params\": {\"symbol\": \"ETHBTC\"},\"id\": 123 } "); // Works good
 
 			// New order
-			Int32 b = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
-			_dataService.WebSocket.Send("{\"method\": \"newOrder\",\"params\": {\"clientOrderId\": \"" + b + "\",\"symbol\": \"EOSUSD\",\"side\": \"buy\",\"type\": \"market\",\"price\": \"0.059837\",\"quantity\": \"0.01\"},\"id\": 123}");
-
+			//Int32 b = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+			//_dataService.WebSocket.Send("{\"method\": \"newOrder\",\"params\": {\"clientOrderId\": \"" + b + "\",\"symbol\": \"EOSUSD\",\"side\": \"buy\",\"type\": \"market\",\"price\": \"0.059837\",\"quantity\": \"0.01\"},\"id\": 123}");
 
 		}
 
 		private void WebSocketOnMessage(object sender, EventArgs<string> e)
 		{
-			MessageBox.Show("HitBtcRealTimeServices.cs: " + e.Data);
 
+			var message = JObject.Parse(e.Data);
+			Console.WriteLine("HitBtcRealtimeDataService.cs: " + message);
 
 			/*
 			try
@@ -121,6 +123,17 @@ namespace BitMEXAssistant
 		{
 			throw new AggregateException(e.Data);
 		}
+
+		public void HitBtcHedgePositionOpen(string clOrdID, TradeDirection direction)
+		{
+
+			// New order
+			//Int32 b = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+			clOrdID = "123456" + clOrdID;
+			_dataService.WebSocket.Send("{\"method\": \"newOrder\",\"params\": {\"clientOrderId\": \"" + clOrdID + "\",\"symbol\": \"ETHUSD\",\"side\": \""+ direction.ToString().ToLower() +"\",\"type\": \"market\",\"price\": \"0.05983\",\"quantity\": \"0.001\"},\"id\": 123}");
+
+		}
+
 
 		// Events declaration
 		// All events are movet to WSEvents.cs class
