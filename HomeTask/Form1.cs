@@ -12,11 +12,6 @@ namespace BitMEXAssistant
 	public partial class Form1 : Form, IMainView 
     {
 
-		// DOM
-		bool quote_received = true; 
-
-		// Trade. Symbol leg 1. Bitmex exchange
-		private Trade trade;
 
 		public string symbol = "ETHUSD"; // ETHUSD
 		//public string clientOrderId = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "bbb"; // Client order id. This id comes back when an order is executed. Used for linking orders together
@@ -34,8 +29,6 @@ namespace BitMEXAssistant
 			InitializeComponent();
 			_database = dataBase;
 
-			// DOM
-
 			panel_big.AutoScroll = true;
 
             dataGridView1.ColumnAdded += (sender, args) => {
@@ -46,9 +39,9 @@ namespace BitMEXAssistant
 		private void Form1_Load(object sender, EventArgs e)
 		{
 			// High and low price values for DOM render
-		    orderBookControl.PriceStart = 6300; // ETHUSD 200-250. XBTCUSD
-		    orderBookControl.PriceEnd = 6900;
-		    orderBookControl.PriceStep = new decimal(0.5); // XBTCUSD: 0.5, ETHUSD: 0.05
+		    orderBookControl.PriceStart = 222; // ETHUSD 200-250. XBTCUSD 6300-6900
+		    orderBookControl.PriceEnd = 240;
+		    orderBookControl.PriceStep = new decimal(0.05); // XBTCUSD: 0.5, ETHUSD: 0.05
 		}
 
         private void ScrollToPrice(decimal currentPrice, ScrollableControl panel) {

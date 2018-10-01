@@ -70,7 +70,7 @@ namespace BitMEXAssistant
 				else
 				{
 
-					sql = String.Format("INSERT INTO `trades` (exchange, rebate_prc, symbol, volume, cl_order_id) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')", "bitmex/hitbtc", 0.025, "XBTUSD", 1, clOrdID);
+					sql = String.Format("INSERT INTO `trades` (exchange, rebate_prc, symbol, volume, cl_order_id) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')", "bitmex/hitbtc", 0.025, "ETHUSD", 1, clOrdID);
 					using (cmd = new MySqlCommand(sql, conn))
 					{
 						cmd.ExecuteNonQuery();

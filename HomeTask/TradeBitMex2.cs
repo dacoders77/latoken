@@ -68,7 +68,7 @@ namespace BitMEXAssistant
 							{
 								
 								sellLimitPrice = (Double)TD[0]["asks"][0][0] + _limitPriceShift;
-								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Sell", 10, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+								string response = _bitmexDataService.Api.LimitOrder("ETHUSD", "Sell", 1, sellLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
 								//MessageBox.Show(response);
 
 								sellOrderId = JObject.Parse(response)["orderID"].ToString();
@@ -87,7 +87,7 @@ namespace BitMEXAssistant
 							{
 								
 								buyLimitPrice = (Double)TD[0]["bids"][0][0] - _limitPriceShift;
-								string response = _bitmexDataService.Api.LimitOrder("XBTUSD", "Buy", 10, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
+								string response = _bitmexDataService.Api.LimitOrder("ETHUSD", "Buy", 1, buyLimitPrice, (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString() + "." + suffix, false, false, false);
 								//MessageBox.Show(response);
 
 								buyOrderId = JObject.Parse(response)["orderID"].ToString();

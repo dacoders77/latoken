@@ -26,7 +26,7 @@ namespace HitBtc
 		private void Form1_Load(object sender, EventArgs e)
 		{
 			// Websocket class instance
-			ws = new WebSocket("wss://api.hitbtc.com/api/2/ws"); // wss://www.bitmex.com/realtime wss://testnet.bitmex.com/realtime
+			ws = new WebSocket("wss://api.hitbtc.com/api/2/ws"); 
 
 			InitializeWebSocket(); // WebSocket warm-up
 
@@ -35,15 +35,29 @@ namespace HitBtc
 		private void InitializeWebSocket()
 		{
 
-
 			ws.OnMessage += (sender, e) =>
 			{
 				WebScocketLastMessage = DateTime.UtcNow;
 				try
 				{
 					JObject message = JObject.Parse(e.Data);
-					//MessageBox.Show("Form1.cs ws.OnMessage line 47 " + Message.ToString());
-					Console.WriteLine("Form1.cs" + message);
+					//Console.WriteLine("Form1.cs" + message);
+
+					if (message.ContainsKey("method"))
+					{
+						if ((string)message["method"] == "report") {
+
+							if (message["params"] != null)
+							{
+								if ((string)message["params"]["status"] == "filled")
+								{
+									Console.WriteLine("Form1.cs: " + message["params"]["side"] + " " + message["params"]["tradePrice"]);
+								}
+									
+							}
+							
+						}
+					}
 				}
 				catch
 				{
@@ -62,11 +76,10 @@ namespace HitBtc
 			// http://www.tools.knowledgewalls.com/jsontostring
 
 			// Auth
-			//ws.Send("{\"method\": \"login\",\"params\": {\"algo\": \"BASIC\",\"pKey\": \"b03ad090c697ccda1301****\",\"sKey\": \"a290c120b3239cb3547df78ab1****\"}}");
 			ws.Send("{\"method\": \"login\",\"params\": {\"algo\": \"BASIC\",\"pKey\": \"" + Settings.pKey + "\",\"sKey\": \"" + Settings.sKey + "\"}}");
 
 			// Subscribe to reports (Order statuses)
-			//ws.Send("{\"method\": \"subscribeTicker\", \"params\": {\"symbol\": \"ETHBTC\"},\"id\": 123 } "); // Works good
+			ws.Send("{\"method\": \"subscribeReports\", \"params\": {} } "); // Works good
 
 			// New order
 			Int32 b = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);

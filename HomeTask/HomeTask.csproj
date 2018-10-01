@@ -84,6 +84,8 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="HitBtcDataService.cs" />
+    <Compile Include="HitBtcRealtimeDataService.cs" />
     <Compile Include="IDataService.cs" />
     <Compile Include="IWebSocket.cs" />
     <Compile Include="MainController.cs" />

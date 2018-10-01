@@ -30,7 +30,7 @@ namespace BitMEXAssistant {
 
 			WebSocket.Connect();
 
-			// Authenticate the API
+			// Authenticate websocket API
 			var apiExpires = Api.GetExpiresArg();
 
 			if (tradingServer == TradinServer.Real)
@@ -44,11 +44,7 @@ namespace BitMEXAssistant {
 				WebSocket.Send($@"{{""op"": ""authKeyExpires"", ""args"": [""{Settings.bitmexDemoApiKey}"", {apiExpires}, ""{signature}""]}}");
 			}
 				
-
-			
 		}
-
-
 
     }
 }
