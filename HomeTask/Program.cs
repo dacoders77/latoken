@@ -35,7 +35,7 @@ namespace BitMEXAssistant
             //_hitbtcDataService = new HitbtcDataService(TradinServer.Demo, _dataBase); 
             //_hitbtcRealtimeDataService = new HitbtcRealtimeDataService(_hitbtcDataService, "ETHUSD"); 
 
-		    _tradeBitMex2 = new TradeBitMex2(_bitmexRealtimeDataService, _bitmexDataService, 0); // Create the reading class + set up order book limit orders shift (0, 0.5. 1 ..)
+		    _tradeBitMex2 = new TradeBitMex2(_bitmexRealtimeDataService, _bitmexDataService, 1); // Create the reading class + set up order book limit orders shift (0, 0.5. 1 ..)
 		    //_tradeBitMex3 = new TradeBitMex2(_bitmexRealtimeDataService, _bitmexDataService, 1); // Works good
 
 		    _mainController = new MainController(_bitmexRealtimeDataService, _mainForm = new Form1(_dataBase), new[] { _tradeBitMex2 });

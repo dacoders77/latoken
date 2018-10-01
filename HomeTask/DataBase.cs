@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using System.Windows.Forms;
 
 
 namespace BitMEXAssistant
@@ -12,69 +17,108 @@ namespace BitMEXAssistant
 	 */
 	public class DataBase
 	{
-		private readonly string _connectionString;
+		private Form1 form;
+		private MySqlConnection dbConn; // MySql connection variable
+		private string connectionString;
+		private string sqlQueryString;
+		private bool flag;
+
+		private string _sql;
+		private double _sellPrice;
+		private double _buyPrice;
+		private double _profit;
+		private double _rebate;
+		private double _profitTotal;
+
 
 		public DataBase()
-        {
-			_connectionString = $@"server={Settings.dbHost};user id=slinger;password=659111;database=home_task";
+		{
+			connectionString = "server=" + Settings.dbHost + ";user id=slinger;password=659111;database=home_task";
+			dbConn = new MySqlConnection(connectionString);
 		}
 
 		// Before trades will be add an empty record is created and Client order id is inserted. Later all 4 orders will use this is as a key
-		public void InsertTradeRow(string clOrdId) 
-        {
-			using (var conn = new MySqlConnection(_connectionString))
+		public void InsertTradeRow(string clOrdID)
+		{
+
+			using (var conn = new MySqlConnection(connectionString))
 			{
-			    if (conn.State == System.Data.ConnectionState.Closed)
-			        conn.Open();
+				if (conn.State == System.Data.ConnectionState.Closed)
+				{
+					conn.Open();
+				}
 
-			    var idFound = false;
-			    var sqlSelect = @"SELECT * FROM `trades`";
-			    using (var cmd = new MySqlCommand(sqlSelect, conn))
-			    using (var reader = cmd.ExecuteReader()) 
-                {
-			        while (reader.Read()) 
-                    {
-                        if (reader[@"cl_order_id"].ToString() != clOrdId)
-                            continue;
+				string sql = "SELECT * FROM `trades`";
+				MySqlCommand cmd = new MySqlCommand(sql, conn);
 
-                        idFound = true;
-                        break;
-                    }
-			    }
+				using (MySqlDataReader reader = cmd.ExecuteReader())
+				{
+					while (reader.Read())
+					{
+						if (reader["cl_order_id"].ToString() == clOrdID)
+						{
+							flag = true; // Id found
+							break;
+						}
+					}
+				}
 
-			    if (idFound)
-			        Console.WriteLine(@"DataBase.cs line 68. Found");
-			    else 
-                {
-			        var sqlInsert = $@"INSERT INTO `trades` (exchange, rebate_prc, symbol, volume, cl_order_id) VALUES ('{"bitmex/hitbtc"}', '{0.025}', '{"XBTUSD"}', '{1}', '{clOrdId}')";
-                    using (var cmd = new MySqlCommand(sqlInsert, conn))
-                        cmd.ExecuteNonQuery();
-                }
 
-			    conn.Close();
+				if (flag)
+					//MessageBox.Show("found!");
+					Console.WriteLine("DataBase.cs line 68. Found");
+				else
+				{
+
+					sql = String.Format("INSERT INTO `trades` (exchange, rebate_prc, symbol, volume, cl_order_id) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')", "bitmex/hitbtc", 0.025, "XBTUSD", 1, clOrdID);
+					using (cmd = new MySqlCommand(sql, conn))
+					{
+						cmd.ExecuteNonQuery();
+					}
+
+				}
+
+				conn.Close();
 			}
+
 		}
 
-		public void UpdateRecord(string clOrdID, string orderId, TradeDirection direction, double price) 
-        {
-			using (var conn = new MySqlConnection(_connectionString))
+		public void UpdateRecord(string clOrdID, string orderID, TradeDirection direction, double price)
+		{
+
+			using (var conn = new MySqlConnection(connectionString))
 			{
-			    if (conn.State == System.Data.ConnectionState.Closed)
-			        conn.Open();
+				if (conn.State == System.Data.ConnectionState.Closed)
+				{
+					conn.Open();
+				}
+				if (direction == TradeDirection.Buy)
+				{
+					_sql = string.Format("UPDATE `trades` SET buy_order_id = '{0}', buy_price = {1} where cl_order_id = {2}", orderID, price, clOrdID);
+					using (MySqlCommand cmd = new MySqlCommand(_sql, conn))
+					{
+						cmd.ExecuteNonQuery();
+					}
+				}
+				else
+				{
+					_sql = string.Format("UPDATE `trades` SET sell_order_id = '{0}', sell_price = {1} where cl_order_id = {2}", orderID, price, clOrdID);
+					using (MySqlCommand cmd = new MySqlCommand(_sql, conn))
+					{
+						cmd.ExecuteNonQuery();
+					}
+				}
 
-			    var orderIdColumn = direction == TradeDirection.Buy ? @"buy_order_id" : @"sell_order_id";
-                var sql = $@"UPDATE `trades` SET {orderIdColumn} = '{orderId}', buy_price = {price} where cl_order_id = {clOrdID}";
-			    using (var cmd = new MySqlCommand(sql, conn))
-			        cmd.ExecuteNonQuery();
-
-			    conn.Close();
+				conn.Close();
 			}
 
+			System.Threading.Thread.Sleep(500); // DELETE! Only for testing
 			BitMexProfitCalculate(clOrdID);
 		}
 
-		public void BitMexProfitCalculate(string clOrderId) 
-        {
+		public void BitMexProfitCalculate(string clOrdID)
+		{
+
 			// Profit
 			// Read sell price
 			// Read buy price
@@ -85,41 +129,73 @@ namespace BitMEXAssistant
 
 			// profit_total = profit + rebate_total
 
-			using (var conn = new MySqlConnection(_connectionString))
+			// Get sell price
+			using (var conn = new MySqlConnection(connectionString))
 			{
-			    if (conn.State == System.Data.ConnectionState.Closed)
-			        conn.Open();
-
-			    decimal sellPrice;
-			    var sqlSelectSell = $@"SELECT sell_price FROM trades WHERE cl_order_id = {clOrderId}";
-			    using (var cmd = new MySqlCommand(sqlSelectSell, conn)) 
-                {
-				    var scalarSellPrice = cmd.ExecuteScalar();
-			        sellPrice = scalarSellPrice == null || scalarSellPrice is DBNull ? 0 : Convert.ToDecimal(scalarSellPrice);
-				}
-
-			    decimal buyPrice;
-			    var sqlSelectBuy = $@"SELECT buy_price FROM trades WHERE cl_order_id = {clOrderId}";
-			    using (var cmd = new MySqlCommand(sqlSelectBuy, conn))
+				if (conn.State == System.Data.ConnectionState.Closed)
 				{
-					var scalarBuyPrice = cmd.ExecuteScalar();
-				    buyPrice = scalarBuyPrice == null || scalarBuyPrice is DBNull ? 0 : Convert.ToDecimal(scalarBuyPrice);
+					conn.Open();
 				}
 
-			    decimal profit = 0;
-			    decimal rebate = 0;
-			    decimal profitTotal = 0;
-                if (sellPrice != 0 && buyPrice != 0) {
-			        profit = sellPrice - buyPrice;
-			        rebate = sellPrice * 0.025M / 100 + buyPrice * 0.025M / 100; // Volume is not calculated!
-			        profitTotal = profit + rebate;
-			    } 
+				_sql = string.Format("SELECT sell_price FROM trades WHERE cl_order_id = {0}", clOrdID);
+				using (MySqlCommand cmd = new MySqlCommand(_sql, conn))
+				{
+					object scalarSellPrice = cmd.ExecuteScalar();
+					//MessageBox.Show("DataBase.cs line 140. : " + scalarSellPrice);
 
-                var sqlUpdate = $@"UPDATE `trades` SET profit = '{profit}', rebate_total = '{rebate}', profit_total = '{profitTotal}' where cl_order_id = {clOrderId}";
-			    using (var cmd = new MySqlCommand(sqlUpdate, conn))
-			        cmd.ExecuteNonQuery();
+					if (scalarSellPrice == null || scalarSellPrice is DBNull)
+					{
+						_sellPrice = 0;
+					}
+					else
+					{
+						_sellPrice = Convert.ToDouble(scalarSellPrice);
+					}
+				}
+				conn.Close();
 
-			    conn.Close();
+				if (conn.State == System.Data.ConnectionState.Closed)
+				{
+					conn.Open();
+				}
+
+				_sql = string.Format("SELECT buy_price FROM trades WHERE cl_order_id = {0}", clOrdID);
+				using (MySqlCommand cmd2 = new MySqlCommand(_sql, conn))
+				{
+					object scalarBuyPrice = cmd2.ExecuteScalar();
+					//MessageBox.Show("DataBase.cs line 161. : " + scalarBuyPrice);
+
+					if (scalarBuyPrice == null || scalarBuyPrice is DBNull)
+					{
+						_buyPrice = 0;
+					}
+					else
+					{
+						_buyPrice = (double)scalarBuyPrice;
+					}
+
+
+					if (_sellPrice != 0 && _buyPrice != 0)
+					{
+						_profit = _sellPrice - _buyPrice;
+						_rebate = (_sellPrice * 0.025 / 100) + (_buyPrice * 0.025 / 100); // Volume is not calculated!
+						_profitTotal = _profit + _rebate;
+					}
+					else
+					{
+						_profit = 0;
+						_rebate = 0;
+						_profitTotal = 0;
+					}
+
+				}
+
+				_sql = string.Format("UPDATE `trades` SET profit = '{0}', rebate_total = '{1}', profit_total = '{2}' where cl_order_id = {3}", _profit, _rebate, _profitTotal, clOrdID);
+				using (MySqlCommand cmd3 = new MySqlCommand(_sql, conn))
+				{
+					cmd3.ExecuteNonQuery();
+				}
+				conn.Close();
 			}
 		}
 	}

@@ -136,7 +136,7 @@ namespace BitMEXAssistant
 
 
 							// Move buy order (Amend)
-							if (order[sellOrderId].Status == "New")
+							if (order[buyOrderId].Status == "New")
 							{
 								if ((buyLimitPrice + _limitPriceShift) == (Double)TD[0]["bids"][0][0])
 								{
@@ -151,7 +151,7 @@ namespace BitMEXAssistant
 										buyLimitPrice = (Double)TD[0]["bids"][0][0] - _limitPriceShift;
 
 										string response = _bitmexDataService.Api.AmendOrder(buyOrderId, buyLimitPrice);
-										//Console.WriteLine("-------------------------- SELL order has moved! Amend it!: " + response);
+										Console.WriteLine("-------------------------- SELL order has moved! Amend it!: " + response);
 									}
 								}
 							}
@@ -212,11 +212,12 @@ namespace BitMEXAssistant
 
 										try
 										{
+											System.Threading.Thread.Sleep(500); // DELETE! Only for testing
 											_bitmexDataService.dataBase.InsertTradeRow(clOrdID);
 										}
 										catch (Exception ex)
 										{
-											Console.WriteLine("TradeBitMex2.cs line 205. Exception thrown: " + ex);
+											Console.WriteLine("TradeBitMex2.cs line 219. Exception thrown: " + ex);
 										}
 										
 									}
@@ -248,11 +249,12 @@ namespace BitMEXAssistant
 
 								try
 								{
+									System.Threading.Thread.Sleep(500); // DELETE! Only for testing
 									_bitmexDataService.dataBase.UpdateRecord(clOrdID, (string)TD[0]["orderID"], order[TD[0]["orderID"].ToString()].Direction, (double)TD[0]["avgPx"]);
 								}
 								catch (Exception ex)
 								{
-									Console.WriteLine("TradeBitMex2.cs line 205. Exception thrown: " + ex);
+									Console.WriteLine("TradeBitMex2.cs line 256. Exception thrown: " + ex);
 								}
 								
 

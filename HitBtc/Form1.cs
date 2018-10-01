@@ -41,8 +41,9 @@ namespace HitBtc
 				WebScocketLastMessage = DateTime.UtcNow;
 				try
 				{
-					JObject Message = JObject.Parse(e.Data);
-					MessageBox.Show("Form1.cs ws.OnMessage line 47 " + Message.ToString());
+					JObject message = JObject.Parse(e.Data);
+					//MessageBox.Show("Form1.cs ws.OnMessage line 47 " + Message.ToString());
+					Console.WriteLine("Form1.cs" + message);
 				}
 				catch
 				{
@@ -64,9 +65,12 @@ namespace HitBtc
 			//ws.Send("{\"method\": \"login\",\"params\": {\"algo\": \"BASIC\",\"pKey\": \"b03ad090c697ccda1301****\",\"sKey\": \"a290c120b3239cb3547df78ab1****\"}}");
 			ws.Send("{\"method\": \"login\",\"params\": {\"algo\": \"BASIC\",\"pKey\": \"" + Settings.pKey + "\",\"sKey\": \"" + Settings.sKey + "\"}}");
 
+			// Subscribe to reports (Order statuses)
+			//ws.Send("{\"method\": \"subscribeTicker\", \"params\": {\"symbol\": \"ETHBTC\"},\"id\": 123 } "); // Works good
+
 			// New order
 			Int32 b = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
-			ws.Send("{\"method\": \"newOrder\",\"params\": {\"clientOrderId\": \"" + b + "\",\"symbol\": \"EOSUSD\",\"side\": \"buy\",\"price\": \"0.059837\",\"quantity\": \"0.01\"},\"id\": 123}");
+			ws.Send("{\"method\": \"newOrder\",\"params\": {\"clientOrderId\": \"" + b + "\",\"symbol\": \"EOSUSD\",\"side\": \"buy\",\"type\": \"market\",\"price\": \"0.059837\",\"quantity\": \"0.01\"},\"id\": 123}");
 
 			// Subscribe to ticker
 			//ws.Send("{\"method\": \"subscribeTicker\", \"params\": {\"symbol\": \"ETHBTC\"},\"id\": 123 } "); // Works good
