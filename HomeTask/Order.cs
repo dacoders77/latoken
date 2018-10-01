@@ -18,13 +18,14 @@ namespace BitMEXAssistant
 		public string Id { get; set; }
 		public string Status { get; set; }
 		public TradeDirection Direction { get; set; }
-        public decimal Price { get; set; }
+        public decimal Price { get; }
 
-		public Order(string id, string status, TradeDirection direction)
+		public Order(string id, string status, TradeDirection direction, decimal price)
 		{
 			Id = id;
 			Status = status;
 			Direction = direction;
+			Price = price;
 		}
 	}
 }

@@ -134,7 +134,7 @@ namespace BitMEXAssistant {
 
             if(ActiveOrders != null)
 		        foreach (var activeOrder in ActiveOrders) {
-		            g.DrawRectangle(Pens.Black, _chartWidth, GetY(activeOrder.Price, fontHeight) - fontHeight / 2, priceBarBackGroundWidth, fontHeight - _backGroundReduction);
+		            g.DrawRectangle(Pens.Black, _chartWidth - 2, GetY(activeOrder.Price, fontHeight) - fontHeight / 2, priceBarBackGroundWidth + 4, fontHeight - _backGroundReduction);
 		        }
 		}
 

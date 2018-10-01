@@ -86,7 +86,7 @@ namespace BitMEXAssistant
 										MessageBox.Show(response);
 										sellOrderId = JObject.Parse(response)["orderID"].ToString();
 
-										order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Sell));
+										//order.Add(sellOrderId, new Order(sellOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Sell));
 										activeSellOrder = true; // Set flag to true when the order is opened 
 									}
 
@@ -99,7 +99,7 @@ namespace BitMEXAssistant
 										//Console.WriteLine("------------ Place order response");
 										//Console.WriteLine(response);
 										
-										order.Add(buyOrderId, new Order(buyOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Buy));
+										//order.Add(buyOrderId, new Order(buyOrderId, JObject.Parse(response)["ordStatus"].ToString(), TradeDirection.Buy));
 										activeBuyOrder = true; // Set flag to true when the order is opened 
 									}
 

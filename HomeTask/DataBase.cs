@@ -109,8 +109,7 @@ namespace BitMEXAssistant
 				conn.Close();
 			}
 
-			System.Threading.Thread.Sleep(2000); // REMOVE THIS
-			//BitMexProfitCalculate(clOrdID);
+			BitMexProfitCalculate(clOrdID);
 		}
 
 		public void BitMexProfitCalculate(string clOrdID) {
