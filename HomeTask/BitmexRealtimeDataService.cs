@@ -25,7 +25,6 @@ namespace BitMEXAssistant {
             _dataService.WebSocket.Message += WebSocketOnMessage;
             _dataService.WebSocket.Error += WebSocketOnError;
 
-			
 
 			InitializeSymbolSpecificData(true);
         }
